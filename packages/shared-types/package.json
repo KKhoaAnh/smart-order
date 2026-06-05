@@ -1,0 +1,11 @@
+{
+  "name": "shared-types",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "lint": "echo 'No lint configured yet'",
+    "build": "echo 'shared-types does not need building — consumed as TypeScript source'"
+  }
+}

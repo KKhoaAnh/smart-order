@@ -1,0 +1,96 @@
+PHẦN 1: CHI TIẾT CÁC BẢNG TRONG CƠ SỞ DỮ LIỆU
+1. Phân hệ Vận hành (Store & Table Management)
+Phân hệ này quản lý cấu trúc vật lý của quán và định danh vị trí khách ngồi qua mã QR.
+
+stores (Quản lý cửa hàng/chi nhánh)
+
+Vai trò: Lưu thông tin các chi nhánh trong chuỗi hệ thống.
+
+Các trường cốt lõi: id (PK), name, address, phone, status (đang hoạt động/tạm đóng cửa), created_at, updated_at.
+
+tables (Quản lý bàn ăn)
+
+Vai trò: Lưu thông tin số bàn, vị trí và là nơi gắn Token định danh QR Code.
+
+Các trường cốt lõi: id (PK), store_id (FK), table_number (Tên/Số bàn), qr_code_token (Chuỗi mã hóa unique dùng để tạo link QR riêng cho từng bàn), status (Trống / Có khách / Đang chờ dọn), created_at.
+
+table_sessions (Quản lý phiên hoạt động tại bàn)
+
+Vai trò: Bắt buộc phải có để chống spam. Khi khách quét mã QR, hệ thống tạo ra một phiên (session) hợp lệ. Chỉ những thiết bị giữ session_token này mới được quyền gửi order vào bàn đó. Khi bàn thanh toán xong, session này sẽ bị hủy (expire).
+
+Các trường cốt lõi: id (PK), table_id (FK), session_token (Unique), status (Active / Expired), opened_at, closed_at.
+
+2. Phân hệ Thực đơn (Menu Management)
+Phân hệ này cần được thiết kế linh hoạt để xử lý các món có nhiều biến thể (Size, Mức đường/đá) và các món kèm (Topping).
+
+categories (Danh mục thực đơn)
+
+Vai trò: Phân loại món ăn/thức uống (Ví dụ: Cà phê, Trà sữa, Bánh ngọt).
+
+Các trường cốt lõi: id (PK), store_id (FK), name, priority (Thứ tự hiển thị trên Web), is_active (Boolean), created_at.
+
+products (Danh sách món gốc)
+
+Vai trò: Lưu thông tin cơ bản của món ăn, đồ uống.
+
+Các trường cốt lõi: id (PK), category_id (FK), name, description, base_price (Giá bán chuẩn), image_url, is_available (Còn hàng/Hết hàng - dùng để bật/tắt nhanh trên menu web), created_at.
+
+product_variants (Biến thể của món)
+
+Vai trò: Xử lý các tùy chọn thay đổi giá của món ăn (Ví dụ: Size S, Size M (+5.000đ), Size L (+10.000đ)).
+
+Các trường cốt lõi: id (PK), product_id (FK), variant_name (Size S/M/L), price_adjustment (Số tiền chênh lệch so với giá gốc), is_default (Boolean).
+
+options (Danh sách thuộc tính/Topping đính kèm)
+
+Vai trò: Quản lý các nhóm tùy chọn (Ví dụ: Nhóm "Mức đường", Nhóm "Topping Trân châu").
+
+Các trường cốt lõi: id (PK), option_name (Trân châu đen, 50% đường, Ít đá...), option_type (Enum: sugar, ice, topping), price (Giá của topping đó, nếu là mức đường/đá thì bằng 0).
+
+product_options (Bảng trung gian n-n)
+
+Vai trò: Liên kết xem một món ăn cụ thể (product_id) thì sẽ có những tùy chọn/topping nào (option_id) đi kèm.
+
+Các trường cốt lõi: product_id (FK), option_id (FK) -> Hợp thành Composite Key.
+
+3. Phân hệ Đặt món & Thanh toán (Order & Payment Management)
+Đây là phân hệ cốt lõi để lưu vết dòng tiền và lịch sử chuẩn bị món ăn.
+
+orders (Hóa đơn/Đơn hàng tổng)
+
+Vai trò: Quản lý tổng quan một lượt gọi món của bàn.
+
+Các trường cốt lõi: id (PK), store_id (FK), table_id (FK), session_token (Liên kết với phiên của bàn), total_amount (Tổng tiền cần trả), order_status (Enum: PENDING - Chờ duyệt, CONFIRMED - Thu ngân đã nhận, COMPLETED - Đã phục vụ xong, CANCELLED - Đã hủy), payment_status (Enum: UNPAID, PAID), created_at, updated_at.
+
+order_items (Chi tiết món trong đơn hàng)
+
+Vai trò: Một đơn hàng có thể gọi nhiều món, bảng này lưu số lượng và giá của từng món tại thời điểm đặt.
+
+Các trường cốt lõi: id (PK), order_id (FK), product_id (FK), variant_id (FK - Có thể null nếu món không chia size), quantity (Số lượng đặt), price (Giá tính tại thời điểm đặt), note (Ghi chú riêng của khách: ít hành, không đá...), item_status (Enum: PENDING, COOKING, SERVED).
+
+order_item_options (Topping đi kèm của từng món trong đơn)
+
+Vai trò: Lưu chính xác ly nước đó khách chọn kèm những topping hay mức đường/đá nào.
+
+Các trường cốt lõi: id (PK), order_item_id (FK), option_id (FK), price (Giá topping tại thời điểm đặt).
+
+payments (Nhật ký giao dịch)
+
+Vai trò: Lưu vết lịch sử thanh toán hóa đơn.
+
+Các trường cốt lõi: id (PK), order_id (FK), payment_method (Enum: CASH - Tiền mặt, VNPAY, MOMO, VIETQR), transaction_id (Mã giao dịch từ đối tác thanh toán trả về nếu có), amount (Số tiền thực tế thanh toán), status (Enum: PENDING, SUCCESS, FAILED), paid_at.
+
+4. Phân hệ Người dùng & Phân quyền (User & Auth Management)
+users (Nhân viên & Quản trị viên)
+
+Vai trò: Quản lý tài khoản đăng nhập của các Actor vận hành hệ thống (Admin, Thu ngân, Đầu bếp, Nhân viên chạy bàn).
+
+Các trường cốt lõi: id (PK), store_id (FK - Xác định nhân viên thuộc chi nhánh nào), username, password_hash (Mật khẩu đã mã hóa), full_name, phone, is_active (Boolean).
+
+roles (Vai trò/Phân quyền)
+
+Vai trò: Quyết định quyền hạn truy cập các tính năng.
+
+Các trường cốt lõi: id (PK), role_name (Admin, Cashier, Kitchen, Waiter).
+
+user_roles (Bảng trung gian n-n): Liên kết user_id và role_id.

@@ -1,0 +1,63 @@
+1. Tư Duy Hệ Thống (System Architecture)
+Bản chất của Web Order QR là một hệ thống Self-Service (Tự phục vụ) biến smartphone của khách hàng thành thiết bị POS di động. Kiến trúc này đòi hỏi sự đồng bộ liên tục giữa 3 thành phần chính:
+
+Client Web (Khách hàng): Thường là dạng Web App hoặc PWA (Progressive Web App) tối ưu cho Mobile-first. Khách không cần tải app, quét là dùng ngay. Yêu cầu lớn nhất ở đây là tốc độ tải trang phải cực nhanh (dưới 3s) và UX/UI trực quan.
+
+Central Backend Server: "Trái tim" của hệ thống. Bạn có thể sử dụng các môi trường mạnh về xử lý I/O và bất đồng bộ (như Node.js) kết hợp với cơ sở dữ liệu quan hệ (MySQL hoặc PostgreSQL) để đảm bảo tính toàn vẹn (ACID) của giao dịch, tránh lỗi over-ordering (đặt quá số lượng tồn kho). Bảo mật API thường được xác thực thông qua JWT.
+
+POS/Admin Client (Thu ngân & Bếp): Ứng dụng đặt tại quầy để tiếp nhận đơn hàng, quản lý trạng thái và in hóa đơn. Thành phần này phải duy trì kết nối liên tục (thường qua WebSockets/Socket.io) với Server để nhận thông báo có đơn ngay lập tức.
+
+2. Luồng Hoạt Động Cốt Lõi (Workflow)
+Để hình dung rõ nhất cách các thành phần giao tiếp với nhau, bạn có thể tham khảo Sequence Diagram (Sơ đồ tuần tự) dưới đây:
+sequenceDiagram
+    participant C as Khách hàng (Web App)
+    participant B as Backend Server
+    participant P as Quầy POS (Thu ngân)
+    participant K as Bếp / Bar
+
+    C->>C: Quét QR tại bàn (URL chứa ID Quán & ID Bàn)
+    C->>B: Request lấy dữ liệu Menu & Trạng thái bàn
+    B-->>C: Trả về Menu, Trạng thái hết/còn món
+    C->>C: Chọn món, thêm ghi chú (ít đá, không hành...)
+    C->>B: Submit Đơn hàng (Gửi Order)
+    B->>P: Bắn sự kiện Real-time qua Socket (Ting ting! Đơn mới)
+    P->>P: Thu ngân kiểm tra & Xác nhận đơn
+    P->>B: Cập nhật status: "Đã xác nhận"
+    B-->>C: Màn hình khách cập nhật: "Bếp đang chuẩn bị món"
+    P->>K: Hệ thống tự động in phiếu chế biến (Order Ticket)
+    K->>C: Nhân viên hoàn thành & mang món ra bàn
+    C->>B: Khách thao tác "Gọi tính tiền" trên điện thoại
+    B->>P: Thông báo yêu cầu thanh toán
+    P-->>C: Hoàn tất thanh toán (Tiền mặt / QR MoMo / VietQR)
+3. Cấu Trúc Tính Năng (Features Breakdown)
+Để hệ thống hoạt động đầy đủ như một mô hình O2O chuyên nghiệp, bạn cần chia nhỏ các tính năng theo từng đối tượng người dùng (Actors):
+
+A. Dành cho Khách Hàng (Customer Web App):
+
+Quét QR & Định danh: Tự động nhận diện bàn đang ngồi. Session (phiên làm việc) của bàn được khóa lại để những người ở xa không thể quét ảnh mã QR trêu đùa đặt đơn ảo.
+
+Menu Động (Dynamic Menu): Phân loại theo nhóm món (Cà phê, Trà, Bánh...). Có thể tìm kiếm, xem hình ảnh và mô tả chi tiết.
+
+Tùy biến món (Toppings & Variants): Chọn size (S, M, L), thêm topping, hoặc ghi chú riêng cho từng món.
+
+Theo dõi trạng thái (Order Tracking): Khách thấy được tiến trình của đơn (Chờ xác nhận -> Đang chế biến -> Đã phục vụ).
+
+Gọi nhân viên (Service Request): Nút gọi nhân viên đến lấy thêm giấy, tăm, hoặc yêu cầu tính tiền tại bàn.
+
+B. Dành cho Thu Ngân / Quản lý (POS Panel):
+
+Bảng điều khiển Real-time: Bắt sự kiện đơn hàng mới nảy lên màn hình lập tức kèm âm thanh thông báo mà không cần tải lại trang.
+
+Xử lý đơn (Order Management): Chấp nhận, từ chối hoặc điều chỉnh đơn (nếu lỡ hết nguyên liệu đột xuất).
+
+In ấn tự động: Phân luồng máy in. Đơn đồ uống tự động in tem ở quầy pha chế, đơn đồ ăn in phiếu ở bếp.
+
+Thanh toán: Tích hợp phương thức đa dạng (Tiền mặt, thẻ, hoặc tạo mã QR thanh toán động như MoMo/VietQR hiển thị số tiền chính xác cần chuyển).
+
+C. Dành cho Admin (Quản trị hệ thống):
+
+Quản lý danh mục, menu, cập nhật giá và ẩn/hiện các món hết hạn.
+
+Tạo và in mã QR gắn cho từng bàn (Table Management).
+
+Xem báo cáo doanh thu theo ca, theo ngày, thống kê món bán chạy.

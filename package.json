@@ -1,0 +1,29 @@
+{
+  "name": "smart-order",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Smart Order QR Code — Hệ thống đặt món thông minh cho cà phê & nhà hàng",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "dev:customer": "turbo dev --filter=customer",
+    "dev:pos": "turbo dev --filter=pos",
+    "dev:api": "turbo dev --filter=api",
+    "db:migrate": "npm run migration:run --workspace=apps/api",
+    "db:seed": "npm run seed --workspace=apps/api"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.0",
+    "prettier": "^3.5.0",
+    "eslint": "^9.0.0"
+  },
+  "packageManager": "npm@10.9.2",
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
