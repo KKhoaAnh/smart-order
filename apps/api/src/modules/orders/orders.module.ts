@@ -10,9 +10,11 @@ import { ProductVariant } from '../../database/entities/product-variant.entity';
 import { Option } from '../../database/entities/option.entity';
 import { TableSession } from '../../database/entities/table-session.entity';
 import { Payment } from '../../database/entities/payment.entity';
+import { TablesModule } from '../tables/tables.module';
 
 @Module({
   imports: [
+    TablesModule,
     TypeOrmModule.forFeature([
       Order,
       OrderItem,

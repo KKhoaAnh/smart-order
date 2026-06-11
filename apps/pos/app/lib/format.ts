@@ -2,6 +2,15 @@
    Smart Order POS — Formatters (Vietnamese locale)
    ============================================================ */
 
+import {
+  parseApiDate,
+  formatTimeVN,
+  formatDateVN,
+  formatDateTimeVN,
+} from 'shared-types';
+
+export { parseApiDate };
+
 /** Format giá tiền: 45000 → "45.000đ" */
 export function formatPrice(amount: number): string {
   return amount.toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + 'đ';
@@ -24,33 +33,25 @@ export function formatOrderNumber(num: number | string): string {
   return `#${String(n).padStart(3, '0')}`;
 }
 
-/** Format giờ: "2026-06-04T14:30:00Z" → "14:30" */
+/** Format giờ theo múi giờ Việt Nam */
 export function formatTime(date: string | Date): string {
-  return new Date(date).toLocaleTimeString('vi-VN', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  });
+  return formatTimeVN(date);
 }
 
-/** Format ngày: "2026-06-04" → "04/06/2026" */
+/** Format ngày theo múi giờ Việt Nam */
 export function formatDate(date: string | Date): string {
-  return new Date(date).toLocaleDateString('vi-VN', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
+  return formatDateVN(date);
 }
 
 /** Format ngày giờ: → "14:30 - 04/06/2026" */
 export function formatDateTime(date: string | Date): string {
-  return `${formatTime(date)} - ${formatDate(date)}`;
+  return formatDateTimeVN(date);
 }
 
 /** Format tương đối: → "vừa xong", "5 phút trước" */
 export function getRelativeTime(date: string | Date): string {
   const now = Date.now();
-  const then = new Date(date).getTime();
+  const then = parseApiDate(date).getTime();
   const diffMs = now - then;
   const diffSec = Math.floor(diffMs / 1000);
   const diffMin = Math.floor(diffSec / 60);

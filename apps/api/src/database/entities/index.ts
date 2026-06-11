@@ -19,3 +19,5 @@ export { Role } from './role.entity';
 export { ServiceRequest } from './service-request.entity';
 export { Notification } from './notification.entity';
 export { ActivityLog } from './activity-log.entity';
+export { Customer } from './customer.entity';
+export { Review } from './review.entity';

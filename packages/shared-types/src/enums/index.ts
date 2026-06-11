@@ -107,6 +107,7 @@ export enum SocketEvents {
   NEW_ORDER = 'new_order',
   ORDER_ITEMS_ADDED = 'order_items_added',
   SERVICE_REQUEST_CREATED = 'service_request_created',
+  TABLE_STATUS_CHANGED = 'table_status_changed',
 
   // Server → Customer
   ORDER_STATUS_CHANGED = 'order_status_changed',

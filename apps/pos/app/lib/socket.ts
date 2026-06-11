@@ -84,6 +84,10 @@ export function onMenuUpdated(callback: EventCallback) {
   socket?.on(SocketEvents.MENU_UPDATED, callback);
 }
 
+export function onTableStatusChanged(callback: EventCallback) {
+  socket?.on(SocketEvents.TABLE_STATUS_CHANGED, callback);
+}
+
 export function removeAllSocketListeners() {
   const events = [
     SocketEvents.NEW_ORDER,
@@ -93,6 +97,7 @@ export function removeAllSocketListeners() {
     SocketEvents.PAYMENT_COMPLETED,
     SocketEvents.SERVICE_REQUEST_CREATED,
     SocketEvents.MENU_UPDATED,
+    SocketEvents.TABLE_STATUS_CHANGED,
   ];
   events.forEach((event) => socket?.off(event));
 }

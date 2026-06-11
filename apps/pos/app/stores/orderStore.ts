@@ -32,6 +32,7 @@ export interface POSOrder {
   table_id: number;
   table_number?: string;
   table_area?: string;
+  table?: { id: number; table_number: string; area?: string };
   store_id: number;
   session_id?: number;
   items: POSOrderItem[];

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback } from 'react';
-import { getNotifications, getUnreadCount, markNotificationRead, markAllNotificationsRead } from '@/app/lib/api';
+import { notificationsApi } from '@/app/lib/api';
 import { useNotificationStore } from '@/app/stores/notificationStore';
 import toast from 'react-hot-toast';
 
@@ -10,31 +10,31 @@ export function useNotifications() {
 
   const fetchNotifications = useCallback(async () => {
     try {
-      const data = await getNotifications();
+      const data = await notificationsApi.getAll();
       setNotifications(data);
-    } catch {}
+    } catch { }
   }, [setNotifications]);
 
   const fetchUnreadCount = useCallback(async () => {
     try {
-      const data = await getUnreadCount();
+      const data = await notificationsApi.getCount();
       setUnreadCount(data.count);
-    } catch {}
+    } catch { }
   }, [setUnreadCount]);
 
   const markRead = async (id: number) => {
     try {
-      await markNotificationRead(id);
+      await notificationsApi.markRead(id);
       markAsRead(id);
-    } catch {}
+    } catch { }
   };
 
   const markAllRead = async () => {
     try {
-      await markAllNotificationsRead();
+      await notificationsApi.markAllRead();
       markAllAsRead();
       toast.success('Đã đọc tất cả thông báo');
-    } catch {}
+    } catch { }
   };
 
   return { fetchNotifications, fetchUnreadCount, markRead, markAllRead };

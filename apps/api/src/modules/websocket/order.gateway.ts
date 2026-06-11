@@ -189,6 +189,17 @@ export class OrderGateway
     this.logger.log(`💰 payment_completed emitted to ${room}`);
   }
 
+  /** Trạng thái bàn thay đổi — gửi cho POS */
+  emitTableStatusChanged(storeId: number, tableData: { table_id: number; status: string; table_number?: string }) {
+    const room = `store:${storeId}`;
+    this.server.to(room).emit('table_status_changed', {
+      type: 'TABLE_STATUS_CHANGED',
+      data: tableData,
+      timestamp: new Date().toISOString(),
+    });
+    this.logger.log(`🪑 table_status_changed emitted to ${room}`);
+  }
+
   /**
    * Khách gọi nhân viên — gửi cho POS/Waiter
    */

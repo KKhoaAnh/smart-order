@@ -72,6 +72,8 @@ export class MenuService {
         products: products.map((p) => ({
           ...p,
           base_price: Number(p.base_price),
+          avg_rating: Number(p.avg_rating) || 0,
+          review_count: p.review_count || 0,
           variants: p.variants.map((v) => ({ ...v, price_adjustment: Number(v.price_adjustment) })),
           options: p.options.map((o) => ({ ...o, price: Number(o.price) })),
         })),

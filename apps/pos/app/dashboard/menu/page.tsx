@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Plus, Coffee, UtensilsCrossed } from 'lucide-react';
+import { Plus, Coffee, UtensilsCrossed, ShieldAlert } from 'lucide-react';
 import { PageHeader } from '@/app/components/layout/PageHeader';
 import { Button } from '@/app/components/ui/Button';
 import { Card } from '@/app/components/ui/Card';
@@ -14,6 +14,7 @@ import { EmptyState } from '@/app/components/ui/EmptyState';
 import { Skeleton } from '@/app/components/ui/Skeleton';
 import { SearchInput } from '@/app/components/ui/SearchInput';
 import { useMenu } from '@/app/hooks/useMenu';
+import { useAuth } from '@/app/hooks/useAuth';
 import { useAuthStore } from '@/app/stores/authStore';
 import { formatPrice } from '@/app/lib/format';
 import { cn } from '@/app/lib/utils';
@@ -21,6 +22,7 @@ import toast from 'react-hot-toast';
 
 export default function MenuPage() {
   const { user } = useAuthStore();
+  const { canManage } = useAuth();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { categories, loading, fetchMenu, createCat, updateCat, deleteCat, createProd, updateProd, deleteProd, toggleAvail } = useMenu();
   const [selectedCatId, setSelectedCatId] = useState<number | null>(null);
@@ -75,15 +77,28 @@ export default function MenuPage() {
 
   return (
     <div>
-      <PageHeader title="Thực đơn" subtitle="Quản lý danh mục và sản phẩm">
+      <PageHeader title="Thực đơn" subtitle={canManage ? 'Quản lý danh mục và sản phẩm' : 'Xem danh mục và sản phẩm'}>
         <SearchInput value={search} onChange={setSearch} placeholder="Tìm sản phẩm..." className="w-56" />
-        <Button icon={<Plus className="w-4 h-4" />} onClick={() => {
-          setProdForm({ name: '', description: '', base_price: 0, category_id: categories[0]?.id?.toString() || '', image_url: '' });
-          setProdModal({ open: true });
-        }}>
-          Thêm sản phẩm
-        </Button>
+        {canManage && (
+          <Button icon={<Plus className="w-4 h-4" />} onClick={() => {
+            setProdForm({ name: '', description: '', base_price: 0, category_id: categories[0]?.id?.toString() || '', image_url: '' });
+            setProdModal({ open: true });
+          }}>
+            Thêm sản phẩm
+          </Button>
+        )}
       </PageHeader>
+
+      {/* Read-only banner for non-admin */}
+      {!canManage && (
+        <div className="mb-4 flex items-center gap-3 bg-warning-bg border border-warning/20 rounded-xl px-4 py-3 animate-fade-in">
+          <ShieldAlert className="w-5 h-5 text-warning flex-shrink-0" />
+          <div>
+            <p className="text-sm font-medium text-text-primary">Chế độ xem</p>
+            <p className="text-xs text-text-secondary">Bạn chỉ có thể xem thực đơn. Liên hệ quản lý để thay đổi.</p>
+          </div>
+        </div>
+      )}
 
       <div className="flex gap-6">
         {/* Category Sidebar */}
@@ -110,12 +125,14 @@ export default function MenuPage() {
               </button>
             ))}
           </div>
-          <Button variant="ghost" size="sm" fullWidth onClick={() => {
-            setCatForm({ name: '', priority: 0 });
-            setCatModal({ open: true });
-          }}>
-            + Thêm danh mục
-          </Button>
+          {canManage && (
+            <Button variant="ghost" size="sm" fullWidth onClick={() => {
+              setCatForm({ name: '', priority: 0 });
+              setCatModal({ open: true });
+            }}>
+              + Thêm danh mục
+            </Button>
+          )}
         </div>
 
         {/* Product Grid */}
@@ -129,14 +146,14 @@ export default function MenuPage() {
           ) : (
             <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {filteredProducts.map((product: any) => (
-                <Card key={product.id} hover padding="none" onClick={() => {
+                <Card key={product.id} hover padding="none" onClick={canManage ? () => {
                   setProdForm({
                     name: product.name, description: product.description || '',
                     base_price: product.base_price, category_id: product.category_id?.toString(),
                     image_url: product.image_url || '',
                   });
                   setProdModal({ open: true, data: product });
-                }}>
+                } : undefined}>
                   <div className="h-32 bg-bg-secondary rounded-t-xl flex items-center justify-center">
                     {product.image_url ? (
                       <img src={product.image_url} alt={product.name} className="w-full h-full object-cover rounded-t-xl" />
@@ -147,12 +164,23 @@ export default function MenuPage() {
                   <div className="p-3">
                     <h3 className="font-medium text-sm text-text-primary truncate">{product.name}</h3>
                     <div className="flex items-center justify-between mt-2">
-                      <span className="font-bold text-brand-primary">{formatPrice(product.base_price)}</span>
-                      <Switch
-                        checked={product.is_available !== false}
-                        onChange={() => toggleAvail(product.id, storeId!)}
-                        label=""
-                      />
+                      <span className="font-bold text-brand-primary">{formatPrice(Number(product.base_price))}</span>
+                      {canManage ? (
+                        <Switch
+                          checked={product.is_available !== false}
+                          onChange={() => toggleAvail(product.id, storeId!)}
+                          label=""
+                        />
+                      ) : (
+                        <span className={cn(
+                          'text-[10px] font-semibold px-2 py-0.5 rounded-full',
+                          product.is_available !== false
+                            ? 'bg-success-bg text-success'
+                            : 'bg-error-bg text-error'
+                        )}>
+                          {product.is_available !== false ? 'Còn hàng' : 'Hết hàng'}
+                        </span>
+                      )}
                     </div>
                     {product.is_popular && <Badge variant="cooking" className="mt-2">Hot</Badge>}
                   </div>
@@ -163,29 +191,33 @@ export default function MenuPage() {
         </div>
       </div>
 
-      {/* Category Modal */}
-      <Modal isOpen={catModal.open} onClose={() => setCatModal({ open: false })} title={catModal.data ? 'Sửa danh mục' : 'Thêm danh mục'} size="sm"
-        footer={<Button onClick={handleSaveCat}>Lưu</Button>}>
-        <div className="space-y-4">
-          <Input label="Tên danh mục" value={catForm.name} onChange={e => setCatForm({ ...catForm, name: e.target.value })} />
-          <Input label="Thứ tự" type="number" value={catForm.priority} onChange={e => setCatForm({ ...catForm, priority: Number(e.target.value) })} />
-        </div>
-      </Modal>
-
-      {/* Product Modal */}
-      <Modal isOpen={prodModal.open} onClose={() => setProdModal({ open: false })} title={prodModal.data ? 'Sửa sản phẩm' : 'Thêm sản phẩm'} size="lg"
-        footer={<Button onClick={handleSaveProd}>Lưu</Button>}>
-        <div className="space-y-4">
-          <Input label="Tên sản phẩm" value={prodForm.name} onChange={e => setProdForm({ ...prodForm, name: e.target.value })} />
-          <Input label="Mô tả" value={prodForm.description} onChange={e => setProdForm({ ...prodForm, description: e.target.value })} />
-          <div className="grid grid-cols-2 gap-4">
-            <Input label="Giá (VNĐ)" type="number" value={prodForm.base_price} onChange={e => setProdForm({ ...prodForm, base_price: Number(e.target.value) })} />
-            <Select label="Danh mục" value={prodForm.category_id} onChange={e => setProdForm({ ...prodForm, category_id: e.target.value })}
-              options={categories.map((c: any) => ({ value: c.id.toString(), label: c.name }))} />
+      {/* Category Modal — only for admin */}
+      {canManage && (
+        <Modal isOpen={catModal.open} onClose={() => setCatModal({ open: false })} title={catModal.data ? 'Sửa danh mục' : 'Thêm danh mục'} size="sm"
+          footer={<Button onClick={handleSaveCat}>Lưu</Button>}>
+          <div className="space-y-4">
+            <Input label="Tên danh mục" value={catForm.name} onChange={e => setCatForm({ ...catForm, name: e.target.value })} />
+            <Input label="Thứ tự" type="number" value={catForm.priority} onChange={e => setCatForm({ ...catForm, priority: Number(e.target.value) })} />
           </div>
-          <Input label="URL hình ảnh" value={prodForm.image_url} onChange={e => setProdForm({ ...prodForm, image_url: e.target.value })} placeholder="https://..." />
-        </div>
-      </Modal>
+        </Modal>
+      )}
+
+      {/* Product Modal — only for admin */}
+      {canManage && (
+        <Modal isOpen={prodModal.open} onClose={() => setProdModal({ open: false })} title={prodModal.data ? 'Sửa sản phẩm' : 'Thêm sản phẩm'} size="lg"
+          footer={<Button onClick={handleSaveProd}>Lưu</Button>}>
+          <div className="space-y-4">
+            <Input label="Tên sản phẩm" value={prodForm.name} onChange={e => setProdForm({ ...prodForm, name: e.target.value })} />
+            <Input label="Mô tả" value={prodForm.description} onChange={e => setProdForm({ ...prodForm, description: e.target.value })} />
+            <div className="grid grid-cols-2 gap-4">
+              <Input label="Giá (VNĐ)" type="number" value={prodForm.base_price} onChange={e => setProdForm({ ...prodForm, base_price: Number(e.target.value) })} />
+              <Select label="Danh mục" value={prodForm.category_id} onChange={e => setProdForm({ ...prodForm, category_id: e.target.value })}
+                options={categories.map((c: any) => ({ value: c.id.toString(), label: c.name }))} />
+            </div>
+            <Input label="URL hình ảnh" value={prodForm.image_url} onChange={e => setProdForm({ ...prodForm, image_url: e.target.value })} placeholder="https://..." />
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

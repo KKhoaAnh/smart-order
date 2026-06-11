@@ -7,12 +7,12 @@ import { Card } from '@/app/components/ui/Card';
 import { Input } from '@/app/components/ui/Input';
 import { Button } from '@/app/components/ui/Button';
 import { Skeleton } from '@/app/components/ui/Skeleton';
-import { useAuthStore } from '@/app/stores/authStore';
+// import { useAuthStore } from '@/app/stores/authStore';
 import { getStore, updateStore } from '@/app/lib/api';
 import toast from 'react-hot-toast';
 
 export default function SettingsPage() {
-  const { user } = useAuthStore();
+  // const { user } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
@@ -46,7 +46,7 @@ export default function SettingsPage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await updateStore(user?.store_id || 1, form);
+      await updateStore(form);
       toast.success('Đã lưu cài đặt');
     } catch (err: any) {
       toast.error(err.message || 'Lỗi lưu cài đặt');

@@ -82,6 +82,8 @@ export interface MenuProductDto {
   image_url?: string;
   is_available: boolean;
   is_popular: boolean;
+  avg_rating?: number;
+  review_count?: number;
   preparation_time?: number;
   variants: MenuVariantDto[];
   options: MenuOptionDto[];
@@ -99,6 +101,43 @@ export interface MenuOptionDto {
   option_name: string;
   option_type: string;
   price: number;
+}
+
+// --- Customer Auth ---
+
+export interface CustomerDto {
+  id: number;
+  phone: string;
+  name: string;
+  avatar_url?: string;
+}
+
+// --- Reviews ---
+
+export interface ReviewDto {
+  id: number;
+  customer_id: number;
+  product_id: number;
+  order_id?: number;
+  rating: number;
+  comment?: string;
+  is_visible: boolean;
+  created_at: string;
+  customer?: CustomerDto;
+  product?: { id: number; name: string };
+}
+
+export interface ReviewSummaryDto {
+  avg_rating: number;
+  total_count: number;
+  distribution: Record<number, number>;
+}
+
+export interface CreateReviewDto {
+  product_id: number;
+  rating: number;
+  comment?: string;
+  order_id?: number;
 }
 
 // --- Service Request ---

@@ -1,7 +1,7 @@
 # 📋 Smart Order QR — Walkthrough Toàn Diện
 
-> **Cập nhật lần cuối**: 2026-06-04  
-> **Trạng thái**: Phase 0 ✅ | Phase 1 ✅ | Phase 2 ✅ | Phase 3 ✅ | Phase 4–6 ⬜  
+> **Cập nhật lần cuối**: 2026-06-05  
+> **Trạng thái**: Phase 0 ✅ | Phase 1 ✅ | Phase 2 ✅ | Phase 3 ✅ | Phase 4 ✅ | Phase 5–6 ⬜  
 > **Mục tiêu**: Hệ thống đặt món thông minh cho quán cà phê & nhà hàng qua QR code.  
 > **Luồng chính**: Khách quét QR → Xem menu → Đặt món → Bếp chế biến → Phục vụ → Thanh toán tại quầy.
 
@@ -472,7 +472,117 @@ Route                                       Size  First Load JS
 
 ---
 
-## 9. Roadmap — Các Phase Tiếp Theo
+## 9. Phase 4: POS / Admin Panel (Frontend) ✅
+
+### 9.1 Tổng quan
+Phase 4 xây dựng hoàn chỉnh giao diện quản lý **POS / Admin Panel** (Next.js, port 3002) dành cho nhân viên quán. Hệ thống sử dụng TailwindCSS 4 (CSS-based custom theme), Zustand để lưu trữ state, và Socket.IO client để đồng bộ dữ liệu thời gian thực. Giao diện được thiết kế tối giản, chuyên nghiệp và có tính ứng dụng cao.
+
+### 9.2 Cấu trúc Thư mục POS App (`apps/pos/app/`)
+```
+apps/pos/app/
+├── globals.css                    # Design system tokens (TailwindCSS 4)
+├── layout.tsx                     # Root Layout (Inter & Playfair Display, Toaster)
+├── page.tsx                       # Root Redirect to /dashboard/orders
+├── lib/
+│   ├── api.ts                     # API Client (38 functions + JWT interceptor)
+│   ├── socket.ts                  # Socket.IO client singleton & rooms
+│   ├── format.ts                  # Tiền tệ, phần trăm, ngày giờ Việt Nam
+│   └── utils.ts                   # Tailwind merge cn(), getInitials(), role helpers
+├── stores/
+│   ├── authStore.ts               # Zustand lưu token, user và persist localStorage
+│   ├── orderStore.ts              # Zustand quản lý danh sách đơn hàng
+│   ├── notificationStore.ts       # Zustand quản lý thông báo realtime
+│   └── uiStore.ts                 # Trạng thái đóng/mở sidebar, modal
+├── hooks/
+│   ├── useAuth.ts                 # Auth business logic (login, logout, checks)
+│   ├── useOrders.ts               # Orders business logic (confirm, reject, pay)
+│   ├── useSocket.ts               # Lắng nghe sự kiện WebSocket realtime + âm thanh
+│   ├── useMenu.ts                 # CRUD thực đơn (Category, Product, Availability)
+│   └── useTables.ts               # CRUD bàn ăn, QR code, lọc khu vực
+├── components/
+│   ├── ui/                        # 14 UI components dùng chung (Button, Badge, Modal, v.v.)
+│   └── layout/                    # Layout components (Sidebar, Header, DashboardLayout)
+├── (auth)/
+│   └── login/                     # Trang đăng nhập premium
+└── dashboard/                     # Các route trong dashboard (bảo vệ bởi Auth Guard)
+    ├── layout.tsx                 # Dashboard Wrapper + Auth Guard + Socket Room Join
+    ├── page.tsx                   # Redirect -> /dashboard/orders
+    ├── orders/                    # Quản lý đơn hàng (Kanban, chi tiết đơn)
+    ├── kitchen/                   # Màn hình bếp KDS (Cooking/Served ticket workflow)
+    ├── menu/                      # Quản lý danh mục & món ăn (Availability switch, CRUD modals)
+    ├── tables/                    # Quản lý bàn ăn (status-colored, QR modal, CRUD)
+    ├── reports/                   # Báo cáo doanh thu & sản phẩm bán chạy (Recharts)
+    ├── users/                     # Quản lý tài khoản nhân viên
+    └── settings/                  # Cài đặt cửa hàng
+```
+
+### 9.3 Chi Tiết Từng Phân Hệ Dashboard
+
+#### 1. 🔐 Xác thực & Đăng nhập (`/login`)
+- Giao diện đăng nhập cao cấp, căn giữa, logo Coffee, hỗ trợ ẩn/hiện mật khẩu, thông báo lỗi bằng Toast chi tiết.
+- Tự động chuyển hướng về `/dashboard/orders` nếu đã có session token hợp lệ (lưu ở `localStorage`).
+
+#### 2. 📋 Màn hình Quản lý đơn hàng (`/dashboard/orders`)
+- **Bộ lọc Trạng thái**: Phân loại Tất cả, Chờ xử lý, Đã xác nhận, Hoàn thành. Mỗi tab hiển thị số lượng đơn real-time.
+- **Tìm kiếm**: Tìm nhanh theo số hóa đơn hoặc số bàn ăn.
+- **Detail Panel**: Slide-over panel hiển thị danh sách chi tiết từng món trong đơn (bao gồm ghi chú, variant, topping), tổng tiền, trạng thái thanh toán.
+- **Hành động xử lý**: Cashier có thể Xác nhận đơn, Từ chối đơn (yêu cầu lý do và lưu lại), và Thanh toán (thanh toán tiền mặt tại quầy).
+
+#### 3. 👨‍🍳 Màn hình Bếp (Kitchen Display System - `/dashboard/kitchen`)
+- Chỉ hiển thị các đơn hàng ở trạng thái `CONFIRMED`.
+- Vé bếp (Kitchen Tickets) hiển thị chi tiết món ăn và được sắp xếp từ cũ nhất đến mới nhất để tránh trễ đơn.
+- Badge thời gian chờ tự động đổi màu theo mức độ cảnh báo (Xanh < 5 phút, Vàng 5 - 10 phút, Đỏ > 10 phút).
+- Nhân viên bếp có thể cập nhật trạng thái chi tiết cho từng món: `PENDING` → `COOKING` → `SERVED`.
+
+#### 4. 🍽️ Quản lý Thực đơn (`/dashboard/menu`)
+- Giao diện chia đôi: Bên trái là danh sách Danh mục, bên phải hiển thị Lưới sản phẩm.
+- Hỗ trợ bật/tắt trạng thái kinh doanh nhanh chóng của món qua Switch.
+- Modal CRUD: Tạo mới/Sửa thông tin Danh mục và Sản phẩm (tên, mô tả, giá bán, ảnh, danh mục).
+
+#### 5. 🪑 Quản lý Bàn & QR (`/dashboard/tables`)
+- Hiển thị danh sách bàn theo lưới, phân loại màu theo trạng thái (Xanh = Trống, Đỏ = Có khách, Vàng = Đã đặt, Xanh dương = Chờ dọn).
+- Tabs lọc động theo Khu vực (Area) được lấy từ dữ liệu bàn ăn.
+- Modal QR Code: Tích hợp `qrcode.react` xuất mã QR động cho từng bàn, cho phép tải ảnh QR về hoặc in ấn.
+- Modal CRUD: Thêm mới, Sửa khu vực/số thứ tự bàn, Xóa bàn.
+
+#### 6. 📊 Báo cáo & Thống kê (`/dashboard/reports`)
+- 4 thẻ thống kê: Tổng doanh thu, Số lượng đơn hàng, Giá trị trung bình đơn, Tỷ lệ hoàn thành đơn.
+- Biểu đồ cột `Recharts` trực quan hóa doanh thu theo thời gian lọc (Hôm nay, 7 ngày qua, 30 ngày qua).
+- Danh sách 5 sản phẩm bán chạy nhất được xếp hạng theo doanh thu.
+
+#### 7. 👥 Nhân viên & Cài đặt (`/dashboard/users`, `/dashboard/settings`)
+- **Quản lý nhân viên**: Bảng hiển thị thông tin nhân viên, vai trò (Cashier/Kitchen/Admin) kèm badge màu sắc và trạng thái hoạt động.
+- **Cài đặt cửa hàng**: Form chỉnh sửa thông tin cửa hàng như tên quán, địa chỉ, số điện thoại, giờ mở cửa và logo.
+
+### 9.4 Real-time & WebSocket Synchronization
+- Khi kết nối được thiết lập, POS client sẽ tự động join vào room `store:{id}` và room bếp `store:{id}:kitchen`.
+- **Sự kiện tích hợp**:
+  - `new_order`: Nhận đơn mới từ Customer App → Toast thông báo nổi + tự động phát âm thanh alert báo hiệu.
+  - `order_status_changed`: Cập nhật trạng thái Kanban của đơn khi có thay đổi.
+  - `item_status_changed`: Cập nhật trạng thái từng món trong vé bếp.
+  - `payment_completed`: Đồng bộ trạng thái đã thanh toán của hóa đơn.
+
+### 9.5 Kết Quả Build & Tối Ưu Hóa Bundle
+- Dự án Next.js build hoàn toàn sạch, không có lỗi TypeScript hoặc warning của ESLint.
+- Dữ liệu dung lượng First Load JS:
+```
+Route (app)                                 Size  First Load JS
+┌ ○ /                                    1.65 kB         103 kB
+├ ○ /_not-found                            979 B         103 kB
+├ ○ /dashboard                             139 B         102 kB
+├ ○ /dashboard/kitchen                   3.52 kB         175 kB
+├ ○ /dashboard/menu                      7.97 kB         167 kB
+├ ○ /dashboard/orders                     6.4 kB         180 kB
+├ ○ /dashboard/reports                    113 kB         271 kB
+├ ○ /dashboard/settings                  5.25 kB         161 kB
+├ ○ /dashboard/tables                      13 kB         171 kB
+├ ○ /dashboard/users                     2.54 kB         161 kB
+└ ○ /login                               5.08 kB         161 kB
+```
+
+---
+
+## 10. Roadmap — Các Phase Tiếp Theo
 
 | Phase | Nội dung | Trạng thái |
 |-------|----------|------------|
@@ -480,7 +590,7 @@ Route                                       Size  First Load JS
 | **Phase 1** | Database & Backend Core | ✅ |
 | **Phase 2** | WebSocket Real-time | ✅ |
 | **Phase 3** | Frontend — Customer Web App | ✅ |
-| **Phase 4** | Frontend — POS/Admin Panel (Next.js): Dashboard, Quản lý đơn, Kitchen Display, Menu CRUD, Thanh toán | ⬜ |
+| **Phase 4** | Frontend — POS/Admin Panel (Next.js): Dashboard, Quản lý đơn, Kitchen Display, Menu CRUD, Thanh toán | ✅ |
 | **Phase 5** | Testing & QA: E2E tests, Unit tests, Load testing, Security audit | ⬜ |
 | **Phase 6** | Deployment: Vercel (FE), Railway (BE), CI/CD | ⬜ |
 
@@ -492,4 +602,5 @@ Route                                       Size  First Load JS
 4. **Thanh toán**: Chỉ hỗ trợ CASH tại quầy. Tạo Payment record + set `payment_status = PAID` + expire session.
 5. **Hệ thống 1 quán**: Không cần multi-tenant logic phức tạp.
 6. **Cart Persist**: Giỏ hàng lưu trong localStorage, tồn tại qua refresh. ID = product+variant+options combo.
+
 

@@ -39,6 +39,12 @@ export class Product {
   @Column({ default: false })
   is_popular: boolean;
 
+  @Column({ type: 'decimal', precision: 3, scale: 1, default: 0 })
+  avg_rating: number;
+
+  @Column({ default: 0 })
+  review_count: number;
+
   @Column({ nullable: true })
   preparation_time: number;
 

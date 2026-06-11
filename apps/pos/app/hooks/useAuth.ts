@@ -1,49 +1,71 @@
 'use client';
-
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/app/stores/authStore';
-import { login as apiLogin, getProfile } from '@/app/lib/api';
-import { disconnectSocket } from '@/app/lib/socket';
+import { authApi } from '@/app/lib/api';
 import toast from 'react-hot-toast';
 
 export function useAuth() {
   const router = useRouter();
-  const { setAuth, clearAuth, user, isAuthenticated, hasRole, isAdmin } =
-    useAuthStore();
+  const { accessToken, user, isAuthenticated, setAuth, clearAuth } = useAuthStore();
 
   const login = async (username: string, password: string) => {
-    const data = await apiLogin(username, password);
-    setAuth(data.user as any, data.access_token);
-    router.push('/dashboard/orders');
-    toast.success('Đăng nhập thành công');
+    try {
+      const response = await authApi.login(username, password);
+      const { access_token, user: userData } = response;
+      setAuth(userData, access_token);
+      toast.success(`Xin chào, ${userData.username}!`);
+      router.replace('/dashboard/orders');
+      return true;
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message || 'Đăng nhập thất bại';
+      toast.error(message);
+      return false;
+    }
   };
 
   const logout = () => {
     clearAuth();
-    disconnectSocket();
-    router.push('/login');
     toast.success('Đã đăng xuất');
+    // Use replace to prevent back-button returning to dashboard after logout
+    router.replace('/login');
   };
 
-  const checkAuth = async () => {
-    try {
-      await getProfile();
-    } catch {
-      clearAuth();
-    }
+  /**
+   * Case-insensitive role check.
+   * Backend returns roles as ["Admin", "Cashier", "Kitchen", "Waiter"]
+   */
+  const hasRole = (roleName: string): boolean => {
+    if (!user?.roles) return false;
+    const target = roleName.toLowerCase();
+    return user.roles.some((r: string) => r.toLowerCase() === target);
   };
+
+  const isAdmin = hasRole('admin');
+  const isCashier = hasRole('cashier');
+  const isKitchen = hasRole('kitchen');
+  const isWaiter = hasRole('waiter');
+
+  /**
+   * Check if user can manage (CRUD) resources — only Admin
+   */
+  const canManage = isAdmin;
+  const canUpdateTableStatus = isAdmin || isCashier || isWaiter;
+  const canViewReports = isAdmin;
 
   return {
-    login,
-    logout,
-    checkAuth,
+    token: accessToken,
     user,
     isAuthenticated,
+    isAdmin,
+    isCashier,
+    isKitchen,
+    isWaiter,
     hasRole,
-    isAdmin: isAdmin(),
-    isCashier: hasRole('Cashier' as any),
-    isKitchen: hasRole('Kitchen' as any),
+    canManage,
+    canUpdateTableStatus,
+    canViewReports,
+    login,
+    logout,
   };
 }
-
-export default useAuth;

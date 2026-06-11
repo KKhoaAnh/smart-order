@@ -108,12 +108,99 @@ Route                                       Size  First Load JS
 └ ƒ /[storeSlug]/tracking                9.06 kB         162 kB
 ```
 
-## 🔷 PHASE 4: Frontend — POS / Admin Panel
-- [ ] 4.1–4.27 — Auth, Orders, Kitchen, Menu, Tables, Payments, Reports
+## 🔷 PHASE 4: Frontend — POS / Admin Panel (Next.js) ✅
+
+### 4.1 Foundation Layer
+- [x] globals.css — POS Design System (tokens, utilities, animations)
+- [x] layout.tsx — Root layout (Inter + Playfair Display fonts, Toaster)
+- [x] page.tsx — Root redirect to `/dashboard/orders`
+- [x] lib/api.ts — API client with JWT Bearer token (38 API functions)
+- [x] lib/socket.ts — Socket.IO client (connect, join room, event listeners)
+- [x] lib/format.ts — Formatters (price, percent, date, time, relative time)
+- [x] lib/utils.ts — cn(), debounce(), getInitials(), getRoleLabel(), getRoleColor()
+- [x] stores/authStore.ts — Auth state (Zustand + localStorage persist)
+- [x] stores/orderStore.ts — Orders state (CRUD, filters)
+- [x] stores/notificationStore.ts — Notifications state
+- [x] stores/uiStore.ts — UI state (sidebar collapsed, modals)
+
+### 4.2 UI Components (14 components)
+- [x] Button — 5 variants, 3 sizes, icon, loading, fullWidth
+- [x] Badge — Status variants (pending, confirmed, cooking, completed, cancelled)
+- [x] Input — Label, error, helper, left/right icons, forwardRef
+- [x] Select — Options, placeholder, error, ChevronDown icon
+- [x] Switch — Animated toggle (framer-motion spring)
+- [x] Modal — Portal, AnimatePresence, 4 sizes, Escape close, overlay
+- [x] Card — Padding variants, hover shadow, click handler
+- [x] Skeleton — Shimmer loading with count repeat
+- [x] EmptyState — Icon + title + description + action button
+- [x] Avatar — Image/initials, 3 sizes, online indicator, deterministic color
+- [x] Dropdown — Click-triggered, AnimatePresence, click outside close
+- [x] Tabs — layoutId animated underline, count badges
+- [x] SearchInput — Debounced 300ms, search icon, clear button
+- [x] ConfirmDialog — 3 variants (danger/warning/info), uses Modal
+
+### 4.3 Layout + Auth
+- [x] Sidebar — Dark sidebar (260/72px), animated collapse, role-based nav, tooltip
+- [x] Header — Sticky, dynamic page title, notification bell, user avatar
+- [x] DashboardLayout — Sidebar + Header + content with margin transition
+- [x] PageHeader — Title + subtitle + action buttons
+- [x] (auth)/layout.tsx — Centered auth layout
+- [x] (auth)/login/page.tsx — Premium login (Coffee icon, show/hide password, motion)
+- [x] hooks/useAuth.ts — login, logout, checkAuth, role helpers
+- [x] dashboard/layout.tsx — Auth guard + socket init + DashboardLayout
+- [x] dashboard/page.tsx — Server redirect to `/dashboard/orders`
+
+### 4.4 Orders (Kanban)
+- [x] Orders page — Grid view, status tabs with counts, search, real-time socket
+- [x] Order cards — Status border, item preview, price, relative time
+- [x] Order detail panel — Slide-over from right (AnimatePresence)
+- [x] Confirm/Reject/Pay actions in panel
+- [x] Reject dialog with ConfirmDialog
+- [x] hooks/useOrders.ts — fetch, confirm, reject, pay
+- [x] hooks/useSocket.ts — Real-time events + sound notification
+
+### 4.5 Kitchen Display (KDS)
+- [x] Kitchen page — Grid tickets for CONFIRMED orders
+- [x] Wait time badge — Color-coded (green < 5min, amber 5-10min, red > 10min)
+- [x] Item status button — PENDING → COOKING → SERVED toggle
+- [x] Sort oldest first, highlight long wait
+
+### 4.6 Menu + Tables
+- [x] Menu page — Category sidebar + product grid
+- [x] Product cards — Image/placeholder, name, price, availability Switch
+- [x] Create/edit category modal
+- [x] Create/edit product modal (name, description, price, category, image)
+- [x] Tables page — Grid with status-colored cards (border-top)
+- [x] Area filter tabs (dynamic from data)
+- [x] Hover actions (Edit/QR/Delete)
+- [x] QR code modal (qrcode.react QRCodeSVG)
+- [x] Create/edit table modal
+- [x] Delete confirm dialog
+- [x] hooks/useMenu.ts — CRUD categories + products, toggle availability
+- [x] hooks/useTables.ts — CRUD tables, regenerate QR, update status
+
+### 4.7 Notifications + Service Requests
+- [x] Notification bell with unread count badge (in Header)
+- [x] hooks/useNotifications.ts — fetch, mark read, mark all read
+- [x] hooks/useServiceRequests.ts — fetch, acknowledge, resolve
+
+### 4.8 Reports + Users + Settings
+- [x] Reports page — 4 stat cards (revenue, orders, avg, completion rate)
+- [x] Revenue bar chart (Recharts BarChart)
+- [x] Top products list (ranked by revenue)
+- [x] Period filter (today, 7 days, 30 days)
+- [x] Users page — Staff table with avatar, role badges, status
+- [x] Settings page — Store info form (name, address, phone, hours, logo)
+
+### 4.9 Build Verification
+- [x] `npx next build` — ✅ Compiled successfully (0 errors, 0 warnings)
+- [x] All 10 routes generated under `/dashboard` (/, /login, /dashboard/orders, /dashboard/kitchen, /dashboard/menu, etc.)
+- [x] ESLint & TypeScript clean
 
 ## 🔷 PHASE 5: Testing & QA
 - [ ] 5.1–5.8 — E2E, Unit tests, Load testing, Security
 
 ## 🔷 PHASE 6: Deployment
 - [ ] 6.1–6.8 — Vercel + Railway + CI/CD
+
 

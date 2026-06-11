@@ -17,6 +17,8 @@ import { OrdersModule } from './modules/orders/orders.module';
 import { ServiceRequestsModule } from './modules/service-requests/service-requests.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { WebsocketModule } from './modules/websocket/websocket.module';
+import { CustomerAuthModule } from './modules/customer-auth/customer-auth.module';
+import { ReviewsModule } from './modules/reviews/reviews.module';
 
 @Module({
   imports: [
@@ -61,6 +63,8 @@ import { WebsocketModule } from './modules/websocket/websocket.module';
     OrdersModule,
     ServiceRequestsModule,
     NotificationsModule,
+    CustomerAuthModule,
+    ReviewsModule,
   ],
   controllers: [],
   providers: [

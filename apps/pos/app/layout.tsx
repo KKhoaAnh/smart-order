@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter, Playfair_Display } from 'next/font/google';
 import { Toaster } from 'react-hot-toast';
+import { Providers } from './providers';
 import './globals.css';
 
 const inter = Inter({
@@ -30,6 +31,8 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
+
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -38,7 +41,9 @@ export default function RootLayout({
   return (
     <html lang="vi" className={`${inter.variable} ${playfair.variable}`}>
       <body className="font-sans antialiased bg-bg-primary text-text-primary min-h-screen">
-        {children}
+        <Providers>
+          {children}
+        </Providers>
         <Toaster
           position="top-right"
           toastOptions={{

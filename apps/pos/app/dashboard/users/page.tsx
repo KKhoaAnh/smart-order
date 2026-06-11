@@ -23,7 +23,7 @@ export default function UsersPage() {
   useEffect(() => {
     async function load() {
       try {
-        const data = await apiFetch<any[]>('users');
+        const data: any[] = await apiFetch('users');
         setUsers(data);
       } catch {
         // Fallback: show current user if API not available

@@ -8,25 +8,33 @@ interface UIState {
   // Sidebar
   sidebarCollapsed: boolean;
   mobileMenuOpen: boolean;
+  _hydrated: boolean;
 
   // Actions
   toggleSidebar: () => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
   setMobileMenuOpen: (open: boolean) => void;
   closeMobileMenu: () => void;
+  hydrate: () => void;
 }
 
-export const useUIStore = create<UIState>((set) => ({
-  sidebarCollapsed: (() => {
-    if (typeof window === 'undefined') return false;
-    try {
-      return localStorage.getItem('pos_sidebar_collapsed') === 'true';
-    } catch {
-      return false;
-    }
-  })(),
-
+export const useUIStore = create<UIState>((set, get) => ({
+  // Server-safe defaults
+  sidebarCollapsed: false,
   mobileMenuOpen: false,
+  _hydrated: false,
+
+  // Hydrate from localStorage — call in useEffect after mount
+  hydrate: () => {
+    if (get()._hydrated) return;
+    if (typeof window === 'undefined') return;
+    try {
+      const collapsed = localStorage.getItem('pos_sidebar_collapsed') === 'true';
+      set({ sidebarCollapsed: collapsed, _hydrated: true });
+    } catch {
+      set({ _hydrated: true });
+    }
+  },
 
   toggleSidebar: () =>
     set((state) => {

@@ -21,7 +21,11 @@ export function useTables() {
       const data = await getTables();
       setTables(data);
     } catch (err: any) {
-      toast.error(err.message || 'Lỗi tải danh sách bàn');
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        'Lỗi tải danh sách bàn';
+      toast.error(msg);
     } finally {
       setLoading(false);
     }

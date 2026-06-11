@@ -17,13 +17,13 @@ export interface ButtonProps
 
 const variantStyles: Record<string, string> = {
   primary:
-    'bg-gradient-to-r from-[#6F4E37] to-[#5A3D2B] text-white shadow-sm hover:from-[#5A3D2B] hover:to-[#4A3223]',
+    'bg-gradient-to-r from-brand-primary to-brand-dark text-white shadow-sm hover:from-brand-dark hover:to-[#2E1B12]',
   secondary:
-    'border border-[#6F4E37] text-[#6F4E37] bg-transparent hover:bg-[#6F4E37]/5',
+    'border border-brand-primary text-brand-primary bg-transparent hover:bg-brand-primary/5',
   ghost:
-    'bg-transparent text-[#4A4A4A] hover:bg-[#F5F0EB]',
+    'bg-transparent text-text-secondary hover:bg-bg-secondary',
   danger:
-    'bg-[#DC2626] text-white shadow-sm hover:bg-[#B91C1C]',
+    'bg-error text-white shadow-sm hover:bg-red-700',
 };
 
 const sizeStyles: Record<string, string> = {
@@ -61,7 +61,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         className={cn(
           'inline-flex items-center justify-center font-medium',
           'transition-colors duration-200',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A0785D] focus-visible:ring-offset-2',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-secondary focus-visible:ring-offset-2',
           'disabled:opacity-50 disabled:cursor-not-allowed',
           variantStyles[variant],
           sizeStyles[size],

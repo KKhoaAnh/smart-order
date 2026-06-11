@@ -11,13 +11,13 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 export class TablesController {
   constructor(private readonly tablesService: TablesService) {}
 
-  @Roles('Admin', 'Cashier')
+  @Roles('Admin', 'Cashier', 'Kitchen', 'Waiter')
   @Get()
   async findAll(@CurrentUser('store_id') storeId: number) {
     return this.tablesService.findAll(storeId);
   }
 
-  @Roles('Admin', 'Cashier')
+  @Roles('Admin', 'Cashier', 'Kitchen', 'Waiter')
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return this.tablesService.findOne(id);

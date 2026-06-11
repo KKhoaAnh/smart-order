@@ -138,6 +138,7 @@ export default function DevHelperPage() {
     switch (status) {
       case 'AVAILABLE': return { bg: '#DCFCE7', text: '#15803D' };
       case 'OCCUPIED': return { bg: '#FEE2E2', text: '#DC2626' };
+      case 'CLEANING': return { bg: '#DBEAFE', text: '#1D4ED8' };
       case 'RESERVED': return { bg: '#FEF3C7', text: '#B45309' };
       default: return { bg: '#F3F4F6', text: '#6B7280' };
     }
@@ -356,7 +357,10 @@ export default function DevHelperPage() {
                       textTransform: 'uppercase',
                       letterSpacing: '0.03em',
                     }}>
-                      {table.status === 'AVAILABLE' ? 'Trống' : table.status === 'OCCUPIED' ? 'Có khách' : table.status}
+                      {table.status === 'AVAILABLE' ? 'Trống'
+                        : table.status === 'OCCUPIED' ? 'Có khách'
+                        : table.status === 'CLEANING' ? 'Dọn dẹp'
+                        : table.status}
                     </span>
                   </div>
 

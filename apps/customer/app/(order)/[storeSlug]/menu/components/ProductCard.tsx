@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Flame, ImageOff } from 'lucide-react';
+import { Flame, ImageOff, Star } from 'lucide-react';
 import { formatPrice } from '../../../../lib/format';
 import type { MenuProductDto } from 'shared-types';
 
@@ -155,23 +155,24 @@ export function ProductCard({ product, onClick, cartQuantity }: ProductCardProps
           )}
         </div>
 
-        {/* Price & Cart Quantity */}
+        {/* Price & Rating */}
         <div className="flex items-center justify-between" style={{ marginTop: 8 }}>
-          <span
-            style={{
-              fontSize: 15,
-              fontWeight: 700,
-              color: '#6F4E37',
-            }}
-          >
+          <span style={{ fontSize: 15, fontWeight: 700, color: '#6F4E37' }}>
             {formatPrice(displayPrice)}
           </span>
-
-          {product.variants && product.variants.length > 1 && (
-            <span style={{ fontSize: 11, color: '#9CA3AF' }}>
-              {product.variants.length} size
-            </span>
-          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {(product.review_count ?? 0) > 0 && (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 11, color: '#9CA3AF' }}>
+                <Star size={11} fill="#F59E0B" color="#F59E0B" />
+                {Number(product.avg_rating).toFixed(1)} ({product.review_count})
+              </span>
+            )}
+            {product.variants && product.variants.length > 1 && (
+              <span style={{ fontSize: 11, color: '#9CA3AF' }}>
+                {product.variants.length} size
+              </span>
+            )}
+          </div>
         </div>
       </div>
 

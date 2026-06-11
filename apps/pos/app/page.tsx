@@ -1,32 +1,22 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/app/stores/authStore';
 import { Coffee } from 'lucide-react';
 
 export default function RootPage() {
   const router = useRouter();
-  const [checking, setChecking] = useState(true);
+  // Store đã được Providers hydrate — giá trị luôn chính xác
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      try {
-        const token = localStorage.getItem('pos_token');
-        if (token) {
-          router.replace('/dashboard/orders');
-        } else {
-          router.replace('/login');
-        }
-      } catch {
-        router.replace('/login');
-      }
-      setChecking(false);
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [router]);
-
-  if (!checking) return null;
+    if (isAuthenticated) {
+      router.replace('/dashboard/orders');
+    } else {
+      router.replace('/login');
+    }
+  }, [isAuthenticated, router]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-bg-primary">

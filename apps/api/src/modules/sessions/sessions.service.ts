@@ -45,7 +45,6 @@ export class SessionsService {
       activeSession.status = 'ACTIVE';
       activeSession = await this.sessionRepo.save(activeSession);
 
-      // Update table status
       table.status = 'OCCUPIED';
       await this.tableRepo.save(table);
     }

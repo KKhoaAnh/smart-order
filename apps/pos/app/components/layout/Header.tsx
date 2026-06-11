@@ -1,9 +1,10 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { Bell } from 'lucide-react';
+import { Bell, PanelLeftOpen } from 'lucide-react';
 import { useAuthStore } from '@/app/stores/authStore';
 import { useNotificationStore } from '@/app/stores/notificationStore';
+import { useUIStore } from '@/app/stores/uiStore';
 import { Avatar } from '@/app/components/ui/Avatar';
 
 const pageTitles: Record<string, string> = {
@@ -12,6 +13,7 @@ const pageTitles: Record<string, string> = {
   '/dashboard/menu': 'Thực đơn',
   '/dashboard/tables': 'Bàn & QR',
   '/dashboard/reports': 'Báo cáo',
+  '/dashboard/reviews': 'Đánh giá',
   '/dashboard/users': 'Nhân viên',
   '/dashboard/settings': 'Cài đặt',
 };
@@ -20,13 +22,26 @@ export function Header() {
   const pathname = usePathname();
   const { user } = useAuthStore();
   const { unreadCount } = useNotificationStore();
+  const { sidebarCollapsed, toggleSidebar } = useUIStore();
 
   const title = Object.entries(pageTitles).find(([k]) => pathname?.startsWith(k))?.[1] || 'Dashboard';
 
   return (
-    <header className="sticky top-0 z-30 bg-white border-b border-border h-16 flex items-center justify-between px-6 shadow-xs">
-      {/* Left — Page Title */}
-      <h1 className="text-lg font-semibold text-text-primary">{title}</h1>
+    <header className="sticky top-0 z-30 bg-bg-card/95 backdrop-blur-sm border-b border-border h-16 flex items-center justify-between px-6 shadow-[0_1px_3px_rgba(111,78,55,0.06)]">
+      {/* Left — Expand sidebar + Page Title */}
+      <div className="flex items-center gap-3">
+        {sidebarCollapsed && (
+          <button
+            onClick={toggleSidebar}
+            aria-label="Mở rộng menu"
+            title="Mở rộng menu"
+            className="p-2 rounded-lg text-text-muted hover:bg-bg-secondary hover:text-brand-primary transition-colors"
+          >
+            <PanelLeftOpen className="w-5 h-5" />
+          </button>
+        )}
+        <h1 className="text-lg font-semibold text-text-primary">{title}</h1>
+      </div>
 
       {/* Right — Actions */}
       <div className="flex items-center gap-4">

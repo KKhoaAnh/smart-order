@@ -3,6 +3,15 @@
    Các hàm format hiển thị cho giao diện khách hàng
    ============================================================ */
 
+import {
+  parseApiDate,
+  formatTimeVN,
+  formatDateVN,
+  formatDateTimeVN,
+} from 'shared-types';
+
+export { parseApiDate };
+
 /**
  * Format giá tiền theo chuẩn Việt Nam.
  * @example formatPrice(29000) → '29.000đ'
@@ -21,12 +30,12 @@ export function formatPrice(amount: number): string {
  * @example formatTime('2026-06-04T14:30:00') → '14:30'
  */
 export function formatTime(date: string | Date): string {
-  const d = typeof date === 'string' ? new Date(date) : date;
-  return d.toLocaleTimeString('vi-VN', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  });
+  return formatTimeVN(date);
+}
+
+/** Format ngày theo múi giờ Việt Nam */
+export function formatDate(date: string | Date): string {
+  return formatDateVN(date);
 }
 
 /**
@@ -34,21 +43,7 @@ export function formatTime(date: string | Date): string {
  * @example formatDateTime('2026-06-04T14:30:00') → '14:30 - 04/06/2026'
  */
 export function formatDateTime(date: string | Date): string {
-  const d = typeof date === 'string' ? new Date(date) : date;
-
-  const time = d.toLocaleTimeString('vi-VN', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  });
-
-  const day = d.toLocaleDateString('vi-VN', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
-
-  return `${time} - ${day}`;
+  return formatDateTimeVN(date);
 }
 
 /**
@@ -72,7 +67,7 @@ export function formatOrderNumber(num: string): string {
  * @example getRelativeTime(1hrAgo) → '1 giờ trước'
  */
 export function getRelativeTime(date: string | Date): string {
-  const d = typeof date === 'string' ? new Date(date) : date;
+  const d = parseApiDate(date);
   const now = new Date();
   const diffMs = now.getTime() - d.getTime();
   const diffSec = Math.floor(diffMs / 1000);

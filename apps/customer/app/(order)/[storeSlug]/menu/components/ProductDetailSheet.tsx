@@ -7,6 +7,7 @@ import { formatPrice } from '../../../../lib/format';
 import { useCartStore, type CartItemInput } from '../../../../store/cart-store';
 import type { MenuProductDto } from 'shared-types';
 import toast from 'react-hot-toast';
+import { ReviewSection } from './ReviewSection';
 
 interface ProductDetailSheetProps {
   product: MenuProductDto | null;
@@ -296,6 +297,8 @@ export function ProductDetailSheet({ product, isOpen, onClose }: ProductDetailSh
                   </div>
                 </div>
               )}
+
+              <ReviewSection productId={product.id} />
 
               {/* Note */}
               <div style={{ padding: '20px 20px 0' }}>

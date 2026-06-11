@@ -3,6 +3,9 @@ import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
 
+// Đồng bộ múi giờ server với Việt Nam (trước khi khởi tạo Nest/TypeORM)
+process.env.TZ = process.env.TZ || 'Asia/Ho_Chi_Minh';
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);

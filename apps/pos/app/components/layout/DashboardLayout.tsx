@@ -1,6 +1,6 @@
 'use client';
 
-import { Sidebar } from './Sidebar';
+import Sidebar from './Sidebar';
 import { Header } from './Header';
 import { useUIStore } from '@/app/stores/uiStore';
 

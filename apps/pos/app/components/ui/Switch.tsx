@@ -51,8 +51,8 @@ export function Switch({
         className={cn(
           'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full',
           'transition-colors duration-200 ease-in-out',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A0785D] focus-visible:ring-offset-2',
-          checked ? 'bg-[#6F4E37]' : 'bg-gray-300',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-secondary focus-visible:ring-offset-2',
+          checked ? 'bg-brand-primary' : 'bg-gray-300',
           disabled && 'opacity-50 cursor-not-allowed'
         )}
       >
@@ -74,7 +74,7 @@ export function Switch({
         <label
           htmlFor={switchId}
           className={cn(
-            'text-sm text-[#4A4A4A] cursor-pointer select-none',
+            'text-sm text-text-secondary cursor-pointer select-none',
             disabled && 'opacity-50 cursor-not-allowed'
           )}
         >

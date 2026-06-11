@@ -13,12 +13,12 @@ import { useSocket } from '@/app/hooks/useSocket';
 import { useOrderStore } from '@/app/stores/orderStore';
 import { useAuthStore } from '@/app/stores/authStore';
 import { updateItemStatus } from '@/app/lib/api';
-import { formatOrderNumber } from '@/app/lib/format';
+import { formatOrderNumber, parseApiDate } from '@/app/lib/format';
 import { cn } from '@/app/lib/utils';
 import toast from 'react-hot-toast';
 
 function getWaitMinutes(createdAt: string) {
-  return Math.floor((Date.now() - new Date(createdAt).getTime()) / 60000);
+  return Math.floor((Date.now() - parseApiDate(createdAt).getTime()) / 60000);
 }
 
 function WaitBadge({ minutes }: { minutes: number }) {
@@ -85,7 +85,7 @@ export default function KitchenPage() {
           o.order_status === 'CONFIRMED' &&
           o.items?.some((it: any) => ['PENDING', 'COOKING'].includes(it.item_status))
       )
-      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+      .sort((a, b) => parseApiDate(a.created_at).getTime() - parseApiDate(b.created_at).getTime());
   }, [orders]);
 
   const handleRefresh = () => {
@@ -128,9 +128,9 @@ export default function KitchenPage() {
                 {/* Ticket Header */}
                 <div className="flex items-center justify-between px-4 py-3 bg-bg-secondary border-b border-border">
                   <div className="flex items-center gap-2">
-                    <span className="font-bold">{formatOrderNumber(order.order_number)}</span>
+                    <span className="font-bold">{order.order_number || formatOrderNumber(order.id)}</span>
                     <span className="text-sm text-text-secondary">
-                      Bàn {order.table_number || '?'}
+                      {order.table?.table_number || 'Bàn ?'}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -154,11 +154,11 @@ export default function KitchenPage() {
                               {item.quantity}x
                             </span>
                             <span className="text-sm font-medium truncate">
-                              {item.product_name}
+                              {item.product?.name || `Món #${item.product_id}`}
                             </span>
                           </div>
-                          {item.variant_name && (
-                            <p className="text-xs text-text-muted ml-6">{item.variant_name}</p>
+                          {item.variant?.variant_name && (
+                            <p className="text-xs text-text-muted ml-6">{item.variant.variant_name}</p>
                           )}
                           {item.note && (
                             <p className="text-xs text-warning ml-6 italic">📝 {item.note}</p>

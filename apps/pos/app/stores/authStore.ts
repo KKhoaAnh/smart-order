@@ -21,43 +21,43 @@ interface AuthState {
   accessToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  _hydrated: boolean;
 
   // Actions
   setAuth: (user: AuthUser, token: string) => void;
   clearAuth: () => void;
   setLoading: (loading: boolean) => void;
+  hydrate: () => void;
   hasRole: (role: RoleName) => boolean;
   hasAnyRole: (roles: RoleName[]) => boolean;
   isAdmin: () => boolean;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
-  // Initial state — rehydrate from localStorage
-  user: (() => {
-    if (typeof window === 'undefined') return null;
-    try {
-      const stored = localStorage.getItem('pos_user');
-      return stored ? JSON.parse(stored) : null;
-    } catch {
-      return null;
-    }
-  })(),
-
-  accessToken: (() => {
-    if (typeof window === 'undefined') return null;
-    try {
-      return localStorage.getItem('pos_token');
-    } catch {
-      return null;
-    }
-  })(),
-
-  isAuthenticated: (() => {
-    if (typeof window === 'undefined') return false;
-    return !!localStorage.getItem('pos_token');
-  })(),
-
+  // Server-safe defaults — hydrate() will populate from localStorage after mount
+  user: null,
+  accessToken: null,
+  isAuthenticated: false,
   isLoading: false,
+  _hydrated: false,
+
+  // Hydrate from localStorage — call in useEffect after mount
+  hydrate: () => {
+    if (get()._hydrated) return;
+    if (typeof window === 'undefined') return;
+    try {
+      const storedUser = localStorage.getItem('pos_user');
+      const storedToken = localStorage.getItem('pos_token');
+      set({
+        user: storedUser ? JSON.parse(storedUser) : null,
+        accessToken: storedToken,
+        isAuthenticated: !!storedToken,
+        _hydrated: true,
+      });
+    } catch {
+      set({ _hydrated: true });
+    }
+  },
 
   // Actions
   setAuth: (user, token) => {

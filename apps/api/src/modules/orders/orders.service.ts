@@ -11,6 +11,7 @@ import { TableSession } from '../../database/entities/table-session.entity';
 import { Payment } from '../../database/entities/payment.entity';
 import { CreateOrderDto, AddOrderItemsDto, OrderItemDto } from './dto/create-order.dto';
 import { OrderGateway } from '../websocket/order.gateway';
+import { TablesService } from '../tables/tables.service';
 
 @Injectable()
 export class OrdersService {
@@ -33,6 +34,7 @@ export class OrdersService {
     private readonly paymentRepo: Repository<Payment>,
     private readonly dataSource: DataSource,
     private readonly orderGateway: OrderGateway,
+    private readonly tablesService: TablesService,
   ) {}
 
   // ── Tạo đơn hàng mới ──
@@ -293,9 +295,8 @@ export class OrdersService {
     order.order_status = 'COMPLETED';
     await this.orderRepo.save(order);
 
-    // Expire session
+    // Đóng phiên → bàn trống (nếu không còn session ACTIVE khác)
     if (order.session) {
-      // WebSocket: Thông báo Customer thanh toán hoàn tất
       this.orderGateway.emitPaymentCompleted(
         order.session.session_token,
         { order_id: orderId, amount: order.total_amount, method: 'CASH' },
@@ -305,6 +306,14 @@ export class OrdersService {
       order.session.closed_at = new Date();
       await this.sessionRepo.save(order.session);
     }
+
+    const table = await this.tablesService.syncTableStatus(order.table_id);
+
+    this.orderGateway.emitTableStatusChanged(order.store_id, {
+      table_id: table.id,
+      status: table.status,
+      table_number: table.table_number,
+    });
 
     return this.getOrderDetail(orderId);
   }

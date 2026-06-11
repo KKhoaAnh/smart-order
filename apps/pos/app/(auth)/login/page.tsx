@@ -30,10 +30,9 @@ export default function LoginPage() {
       const data = await login(username, password);
       setAuth(data.user as any, data.access_token);
       toast.success('Đăng nhập thành công');
-      router.push('/dashboard/orders');
+      router.replace('/dashboard/orders');
     } catch (err: any) {
       toast.error(err.message || 'Đăng nhập thất bại');
-    } finally {
       setLoading(false);
     }
   };
