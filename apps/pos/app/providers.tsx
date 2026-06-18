@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useAuthStore } from '@/app/stores/authStore';
 import { useUIStore } from '@/app/stores/uiStore';
 import { Coffee } from 'lucide-react';

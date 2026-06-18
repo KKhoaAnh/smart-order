@@ -238,7 +238,15 @@ export default function TrackingPage() {
             boxShadow: '0 2px 8px rgba(111, 78, 55, 0.05)',
           }}
         >
-          <OrderTimeline status={currentOrder.status} />
+          <OrderTimeline
+            status={
+              // Nếu order đang CONFIRMED nhưng có item đang COOKING → hiển thị COOKING trên timeline
+              currentOrder.status === 'CONFIRMED' &&
+              currentOrder.items.some((item) => item.itemStatus === 'COOKING')
+                ? 'COOKING'
+                : currentOrder.status
+            }
+          />
         </motion.div>
 
         {/* Order Items */}

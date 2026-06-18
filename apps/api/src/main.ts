@@ -1,9 +1,10 @@
+import './config/pg-timestamp';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
 
-// Đồng bộ múi giờ server với Việt Nam (trước khi khởi tạo Nest/TypeORM)
+// TZ Node = VN cho log/business logic; timestamp DB vẫn parse UTC qua pg-timestamp.ts
 process.env.TZ = process.env.TZ || 'Asia/Ho_Chi_Minh';
 
 async function bootstrap() {

@@ -3,7 +3,8 @@
 import { useEffect } from 'react';
 import {
   connectSocket,
-  disconnectSocket,
+  acquireSocket,
+  releaseSocket,
   joinStoreRoom,
   onNewOrder,
   onOrderItemsAdded,
@@ -15,21 +16,46 @@ import {
 import { useOrderStore } from '@/app/stores/orderStore';
 import toast from 'react-hot-toast';
 
+/** Unwrap socket payload: backend gửi { type, data, timestamp } */
+function unwrap(payload: any): any {
+  return payload?.data ?? payload;
+}
+
+/** Normalize order data từ socket để khớp với store format */
+function normalizeOrder(raw: any): any {
+  if (!raw || !raw.id) return raw;
+  return {
+    ...raw,
+    total_amount: Number(raw.total_amount) || 0,
+    created_at: raw.created_at || new Date().toISOString(),
+    items: (raw.items || []).map((item: any) => ({
+      ...item,
+      price: Number(item.price) || 0,
+      subtotal: Number(item.subtotal) || 0,
+      quantity: Number(item.quantity) || 0,
+    })),
+  };
+}
+
 export function useSocket(storeId: number | undefined) {
   const { addOrder, updateOrder } = useOrderStore();
 
   useEffect(() => {
     if (!storeId) return;
 
+    acquireSocket();
     connectSocket();
     joinStoreRoom(storeId);
 
-    onNewOrder((order) => {
+    onNewOrder((payload) => {
+      const order = normalizeOrder(unwrap(payload));
       addOrder(order);
-      toast.success(`Đơn mới #${String(order.order_number).padStart(3, '0')}`, {
+      const orderNum = order.order_number
+        ? String(order.order_number).padStart(3, '0')
+        : order.id;
+      toast.success(`Đơn mới #${orderNum}`, {
         icon: '🔔',
       });
-      // Play notification sound
       try {
         const audio = new Audio(
           'data:audio/wav;base64,UklGRl9vT19teleXN0AUAAIBAAAEAB//AAIAAAQATIRBQQAAAA=='
@@ -39,17 +65,24 @@ export function useSocket(storeId: number | undefined) {
       } catch {}
     });
 
-    onOrderItemsAdded((data) => {
-      updateOrder(data);
+    onOrderItemsAdded((payload) => {
+      const data = unwrap(payload);
+      if (data?.id) updateOrder(data);
       toast('Gọi thêm món', { icon: '🍽️' });
     });
 
-    onItemStatusChanged((data) => {
-      updateOrder(data);
+    onItemStatusChanged((payload) => {
+      const data = unwrap(payload);
+      if (data?.order_id) {
+        updateOrder({ id: data.order_id, ...data } as any);
+      }
     });
 
-    onPaymentCompleted((data) => {
-      updateOrder(data);
+    onPaymentCompleted((payload) => {
+      const data = unwrap(payload);
+      if (data?.order_id) {
+        updateOrder({ id: data.order_id, payment_status: 'PAID', order_status: 'COMPLETED' } as any);
+      }
       toast.success('Thanh toán hoàn tất');
     });
 
@@ -59,7 +92,7 @@ export function useSocket(storeId: number | undefined) {
 
     return () => {
       removeAllSocketListeners();
-      disconnectSocket();
+      releaseSocket();
     };
   }, [storeId, addOrder, updateOrder]);
 }

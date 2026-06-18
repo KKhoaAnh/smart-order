@@ -521,11 +521,51 @@ export default function OrdersPage() {
                     <div className="rounded-xl border border-dashed border-border bg-bg-card/50 px-4 py-8 text-center">
                       <p className="text-sm text-text-muted">Không có đơn trong mục này</p>
                     </div>
+                  ) : section.key === 'week' ? (
+                    /* Section "7 ngày trước" — nhóm theo ngày */
+                    (() => {
+                      const byDate: Record<string, any[]> = {};
+                      for (const order of sectionOrders) {
+                        const dateKey = formatDate(order.created_at);
+                        if (!byDate[dateKey]) byDate[dateKey] = [];
+                        byDate[dateKey].push(order);
+                      }
+                      let globalIdx = 0;
+                      return Object.entries(byDate).map(([dateKey, dateOrders]) => (
+                        <div key={dateKey} className="space-y-3">
+                          <div className="flex items-center gap-2 pt-2">
+                            <CalendarDays className="w-4 h-4 text-brand-primary" />
+                            <span className="text-sm font-semibold text-text-secondary">{dateKey}</span>
+                            <span className="text-xs text-text-muted">({dateOrders.length} đơn)</span>
+                            <div className="flex-1 h-px bg-border-light" />
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                            {dateOrders.map((order: any) => {
+                              const idx = globalIdx++;
+                              return (
+                                <OrderCard
+                                  key={order.id ?? `fallback-${idx}`}
+                                  order={order}
+                                  index={idx}
+                                  onViewDetail={viewOrderDetail}
+                                  onConfirm={handleConfirm}
+                                  onReject={(o) => {
+                                    setOrderToReject(o);
+                                    setShowRejectModal(true);
+                                  }}
+                                  onPayment={handlePayment}
+                                />
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ));
+                    })()
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                       {sectionOrders.map((order: any, index: number) => (
                         <OrderCard
-                          key={order.id}
+                          key={order.id ?? `fallback-${index}`}
                           order={order}
                           index={index}
                           onViewDetail={viewOrderDetail}
@@ -596,7 +636,7 @@ export default function OrdersPage() {
                 <div className="space-y-3">
                   {selectedOrder.items?.map((item: any, idx: number) => (
                     <div
-                      key={idx}
+                      key={item.id ?? `item-${idx}`}
                       className="flex items-start justify-between p-3 bg-bg-secondary rounded-xl hover:bg-border-light transition-colors"
                     >
                       <div className="flex-1">
@@ -666,11 +706,10 @@ export default function OrdersPage() {
                 {(selectedOrder.order_status === 'COMPLETED') &&
                   selectedOrder.payment_status !== 'PAID' && (
                     <Button
-                      className="w-full"
+                      className="w-full flex items-center justify-center gap-2 whitespace-nowrap"
                       onClick={() => handlePayment(selectedOrder.id)}
                     >
-                      <CreditCard className="w-4 h-4 mr-2" />
-                      Thanh toán tiền mặt
+                      <span>Thanh toán tiền mặt</span>
                     </Button>
                   )}
               </div>

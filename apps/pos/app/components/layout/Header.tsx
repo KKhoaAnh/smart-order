@@ -5,6 +5,7 @@ import { Bell, PanelLeftOpen } from 'lucide-react';
 import { useAuthStore } from '@/app/stores/authStore';
 import { useNotificationStore } from '@/app/stores/notificationStore';
 import { useUIStore } from '@/app/stores/uiStore';
+import LiveClock from '@/app/components/ui/LiveClock';
 import { Avatar } from '@/app/components/ui/Avatar';
 
 const pageTitles: Record<string, string> = {
@@ -45,6 +46,9 @@ export function Header() {
 
       {/* Right — Actions */}
       <div className="flex items-center gap-4">
+        {/* Live Clock — Vietnam timezone */}
+        <LiveClock />
+
         {/* Notification Bell */}
         <button className="relative p-2 rounded-lg text-text-muted hover:bg-bg-secondary hover:text-text-primary transition-colors">
           <Bell className="w-5 h-5" />

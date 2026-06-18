@@ -37,8 +37,14 @@ function getDaysAgo(date: Date, now = new Date()): number {
   return Math.round((todayUtc - orderUtc) / (24 * 60 * 60 * 1000));
 }
 
-export function getOrderTimeSection(order: { order_status?: string; created_at: string }): OrderTimeSection {
+export function getOrderTimeSection(order: { order_status?: string; payment_status?: string; created_at: string }): OrderTimeSection {
+  // Đơn đang xử lý (PENDING / CONFIRMED) → luôn ở "Hiện tại"
   if (ACTIVE_STATUSES.has(order.order_status || 'PENDING')) {
+    return 'current';
+  }
+
+  // Đơn hoàn thành nhưng chưa thanh toán → vẫn cần xử lý → "Hiện tại"
+  if (order.order_status === 'COMPLETED' && order.payment_status !== 'PAID') {
     return 'current';
   }
 
@@ -52,7 +58,7 @@ export function getOrderTimeSection(order: { order_status?: string; created_at: 
   return 'week';
 }
 
-export function groupOrdersByTimeSection<T extends { order_status?: string; created_at: string }>(
+export function groupOrdersByTimeSection<T extends { order_status?: string; payment_status?: string; created_at: string }>(
   orders: T[],
 ): Record<OrderTimeSection, T[]> {
   const groups: Record<OrderTimeSection, T[]> = {

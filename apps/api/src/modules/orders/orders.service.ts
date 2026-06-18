@@ -12,6 +12,7 @@ import { Payment } from '../../database/entities/payment.entity';
 import { CreateOrderDto, AddOrderItemsDto, OrderItemDto } from './dto/create-order.dto';
 import { OrderGateway } from '../websocket/order.gateway';
 import { TablesService } from '../tables/tables.service';
+import { serializeDates } from '../../common/utils/serialize-dates';
 
 @Injectable()
 export class OrdersService {
@@ -169,7 +170,7 @@ export class OrdersService {
     });
     if (!order) throw new NotFoundException('Đơn hàng không tồn tại');
 
-    return {
+    return serializeDates({
       ...order,
       total_amount: Number(order.total_amount),
       items: order.items.map((item) => ({
@@ -181,7 +182,7 @@ export class OrdersService {
           price: Number(so.price),
         })),
       })),
-    };
+    });
   }
 
   // ── Lấy orders theo store (cho POS) ──

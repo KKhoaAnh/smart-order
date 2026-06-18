@@ -75,6 +75,7 @@ export function OrderTimeline({ status, rejectReason }: OrderTimelineProps) {
     switch (status) {
       case 'PENDING': return 0;
       case 'CONFIRMED': return 1;
+      case 'COOKING': return 2;
       case 'COMPLETED': return 3;
       default: return 0;
     }

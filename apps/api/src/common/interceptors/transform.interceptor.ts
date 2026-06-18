@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { serializeDates } from '../utils/serialize-dates';
 
 export interface ResponseFormat<T> {
   success: boolean;
@@ -24,7 +25,7 @@ export class TransformInterceptor<T> implements NestInterceptor<T, ResponseForma
     return next.handle().pipe(
       map((data) => ({
         success: true,
-        data,
+        data: serializeDates(data),
         timestamp: new Date().toISOString(),
       })),
     );

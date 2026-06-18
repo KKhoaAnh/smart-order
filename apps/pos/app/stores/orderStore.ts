@@ -67,11 +67,19 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 
   setOrders: (orders) => set({ orders }),
 
-  addOrder: (order) =>
+  addOrder: (raw) =>
     set((state) => {
+      // Unwrap nested socket payload (e.g. { order: {...} })
+      const order = (raw && typeof raw === 'object' && 'order' in raw && (raw as any).order?.id)
+        ? (raw as any).order
+        : raw;
+
+      // Skip orders without a valid id to avoid React key warnings
+      if (!order || !order.id) return state;
+
       const exists = state.orders.find((o) => o.id === order.id);
       if (exists) {
-        return { orders: state.orders.map((o) => (o.id === order.id ? order : o)) };
+        return { orders: state.orders.map((o) => (o.id === order.id ? { ...o, ...order } : o)) };
       }
       return { orders: [order, ...state.orders] };
     }),

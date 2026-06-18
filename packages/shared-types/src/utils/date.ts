@@ -3,7 +3,8 @@ export const VN_TIMEZONE = 'Asia/Ho_Chi_Minh';
 
 /**
  * Parse chuỗi ngày từ API.
- * PostgreSQL/TypeORM thường trả timestamp không kèm offset — coi là UTC rồi hiển thị theo VN.
+ * - Có Z hoặc offset (+07:00): parse theo chuẩn ISO.
+ * - Không có offset: API/DB lưu UTC → gắn Z rồi hiển thị theo VN.
  */
 export function parseApiDate(input: string | Date): Date {
   if (input instanceof Date) return input;
@@ -16,7 +17,7 @@ export function parseApiDate(input: string | Date): Date {
   }
 
   if (/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}/.test(value)) {
-    return new Date(value.replace(' ', 'T') + 'Z');
+    return new Date(`${value.replace(' ', 'T')}Z`);
   }
 
   return new Date(value);

@@ -9,7 +9,7 @@ import { Button } from '@/app/components/ui/Button';
 import { EmptyState } from '@/app/components/ui/EmptyState';
 import { Skeleton } from '@/app/components/ui/Skeleton';
 import { useOrders } from '@/app/hooks/useOrders';
-import { useSocket } from '@/app/hooks/useSocket';
+import { useMinuteTick } from '@/app/hooks/useMinuteTick';
 import { useOrderStore } from '@/app/stores/orderStore';
 import { useAuthStore } from '@/app/stores/authStore';
 import { updateItemStatus } from '@/app/lib/api';
@@ -72,7 +72,7 @@ export default function KitchenPage() {
   const { orders } = useOrderStore();
   const { fetchOrders, loading } = useOrders();
 
-  useSocket(user?.store_id);
+  useMinuteTick();
 
   useEffect(() => {
     if (user?.store_id) fetchOrders(user.store_id);

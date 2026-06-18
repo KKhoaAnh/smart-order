@@ -10,11 +10,13 @@ import { SocketEvents } from 'shared-types';
 const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001';
 
 let socket: Socket | null = null;
+let joinedStoreId: number | null = null;
+let socketSubscribers = 0;
 
 /* ── Connect / Disconnect ─────────────────────────────────── */
 
 export function connectSocket(): Socket {
-  if (socket?.connected) return socket;
+  if (socket) return socket;
 
   socket = io(SOCKET_URL, {
     transports: ['websocket', 'polling'],
@@ -23,6 +25,12 @@ export function connectSocket(): Socket {
     reconnectionDelay: 1000,
     reconnectionDelayMax: 5000,
     timeout: 10000,
+  });
+
+  socket.on('connect', () => {
+    if (joinedStoreId != null) {
+      socket?.emit(SocketEvents.JOIN_STORE_ROOM, { store_id: joinedStoreId });
+    }
   });
 
   if (process.env.NODE_ENV === 'development') {
@@ -34,12 +42,25 @@ export function connectSocket(): Socket {
   return socket;
 }
 
+/** Tăng ref-count; chỉ disconnect khi không còn subscriber nào. */
+export function acquireSocket(): void {
+  socketSubscribers += 1;
+}
+
+export function releaseSocket(): void {
+  socketSubscribers = Math.max(0, socketSubscribers - 1);
+  if (socketSubscribers === 0) {
+    disconnectSocket();
+  }
+}
+
 export function disconnectSocket() {
   if (socket) {
     socket.removeAllListeners();
     socket.disconnect();
     socket = null;
   }
+  joinedStoreId = null;
 }
 
 export function getSocket(): Socket | null {
@@ -49,7 +70,11 @@ export function getSocket(): Socket | null {
 /* ── Room Management ──────────────────────────────────────── */
 
 export function joinStoreRoom(storeId: number, role?: string) {
-  socket?.emit(SocketEvents.JOIN_STORE_ROOM, { store_id: storeId, role });
+  joinedStoreId = storeId;
+  connectSocket();
+  if (socket?.connected) {
+    socket.emit(SocketEvents.JOIN_STORE_ROOM, { store_id: storeId, role });
+  }
 }
 
 /* ── Event Listeners ──────────────────────────────────────── */
