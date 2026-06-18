@@ -64,7 +64,11 @@ export function useSocket() {
       const newStatus = itemData.item_status || itemData.status;
 
       if (itemId && newStatus) {
-        updateItemStatus(itemId, newStatus);
+        updateItemStatus(
+          itemId,
+          newStatus,
+          itemData.cooking_started_at || itemData.cookingStartedAt,
+        );
 
         if (newStatus === 'COOKING') {
           toast(`${itemData.product_name || 'Món'} đang được chế biến...`, {

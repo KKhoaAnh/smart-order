@@ -47,6 +47,10 @@ export class OrderItem {
   })
   item_status: string;
 
+  /** Thời điểm bếp bấm "Chế biến" — dùng cho đếm thời gian trên app khách */
+  @Column({ type: 'timestamp', nullable: true })
+  cooking_started_at: Date | null;
+
   // ── Relations ──
   @ManyToOne(() => Order, (order) => order.items, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'order_id' })

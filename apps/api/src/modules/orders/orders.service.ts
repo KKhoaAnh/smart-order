@@ -244,6 +244,12 @@ export class OrdersService {
     if (!item) throw new NotFoundException('Món không tồn tại trong đơn');
 
     item.item_status = status;
+    if (status === 'COOKING') {
+      item.cooking_started_at = new Date();
+    } else if (status === 'PENDING') {
+      item.cooking_started_at = null;
+    }
+
     await this.orderItemRepo.save(item);
 
     // WebSocket: Thông báo thay đổi trạng thái món
@@ -251,12 +257,14 @@ export class OrdersService {
       this.orderGateway.emitItemStatusChanged(
         item.order.store_id,
         item.order.session.session_token,
-        {
+        serializeDates({
           order_id: item.order_id,
           item_id: itemId,
+          id: itemId,
           item_status: status,
           product_name: item.product?.name,
-        },
+          cooking_started_at: item.cooking_started_at,
+        }),
       );
     }
 

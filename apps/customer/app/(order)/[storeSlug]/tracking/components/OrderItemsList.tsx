@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { formatPrice } from '../../../../lib/format';
+import { ItemCookingTimer } from './ItemCookingTimer';
 
 interface OrderItemsListProps {
   items: {
@@ -14,6 +15,7 @@ interface OrderItemsListProps {
     note?: string;
     orderRound: number;
     itemStatus: string;
+    cookingStartedAt?: string;
     options: { name: string; price: number }[];
   }[];
 }
@@ -157,24 +159,29 @@ export function OrderItemsList({ items }: OrderItemsListProps) {
                       </p>
                     )}
 
-                    {/* Status badge */}
-                    <motion.span
-                      key={item.itemStatus}
-                      initial={{ scale: 0.9 }}
-                      animate={{ scale: 1 }}
-                      style={{
-                        display: 'inline-block',
-                        marginTop: 6,
-                        fontSize: 11,
-                        fontWeight: 600,
-                        padding: '3px 10px',
-                        borderRadius: 20,
-                        backgroundColor: statusConfig.bg,
-                        color: statusConfig.color,
-                      }}
-                    >
-                      {statusConfig.label}
-                    </motion.span>
+                    {/* Status badge + cooking timer */}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', marginTop: 6 }}>
+                      <motion.span
+                        key={item.itemStatus}
+                        initial={{ scale: 0.9 }}
+                        animate={{ scale: 1 }}
+                        style={{
+                          display: 'inline-block',
+                          fontSize: 11,
+                          fontWeight: 600,
+                          padding: '3px 10px',
+                          borderRadius: 20,
+                          backgroundColor: statusConfig.bg,
+                          color: statusConfig.color,
+                        }}
+                      >
+                        {statusConfig.label}
+                      </motion.span>
+                      <ItemCookingTimer
+                        itemStatus={item.itemStatus}
+                        cookingStartedAt={item.cookingStartedAt}
+                      />
+                    </div>
                   </div>
 
                   {/* Right: Price */}

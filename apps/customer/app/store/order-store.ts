@@ -22,6 +22,7 @@ export interface TrackedOrderItem {
   note?: string;
   orderRound: number;
   itemStatus: `${ItemStatus}`;
+  cookingStartedAt?: string;
   options: TrackedOrderItemOption[];
 }
 
@@ -43,7 +44,7 @@ interface OrderState {
   // Actions
   setOrder: (order: TrackedOrder) => void;
   updateOrderStatus: (status: `${OrderStatus}`) => void;
-  updateItemStatus: (itemId: number, status: `${ItemStatus}`) => void;
+  updateItemStatus: (itemId: number, status: `${ItemStatus}`, cookingStartedAt?: string) => void;
   clearOrder: () => void;
   setLoading: (loading: boolean) => void;
 }
@@ -71,7 +72,7 @@ export const useOrderStore = create<OrderState>((set) => ({
       };
     }),
 
-  updateItemStatus: (itemId, status) =>
+  updateItemStatus: (itemId, status, cookingStartedAt) =>
     set((state) => {
       if (!state.currentOrder) return state;
       return {
@@ -79,7 +80,16 @@ export const useOrderStore = create<OrderState>((set) => ({
           ...state.currentOrder,
           items: state.currentOrder.items.map((item) =>
             item.id === itemId
-              ? { ...item, itemStatus: status }
+              ? {
+                  ...item,
+                  itemStatus: status,
+                  cookingStartedAt:
+                    status === 'COOKING'
+                      ? cookingStartedAt || item.cookingStartedAt || new Date().toISOString()
+                      : status === 'PENDING'
+                        ? undefined
+                        : item.cookingStartedAt,
+                }
               : item,
           ),
         },

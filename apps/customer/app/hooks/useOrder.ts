@@ -176,6 +176,7 @@ function mapOrderResponse(data: any) {
       note: item.note || undefined,
       orderRound: item.order_round || item.orderRound || 1,
       itemStatus: item.item_status || item.itemStatus || 'PENDING',
+      cookingStartedAt: item.cooking_started_at || item.cookingStartedAt || undefined,
       options: (item.options || item.order_item_options || []).map((opt: any) => ({
         name: opt.option?.option_name || opt.name || opt.option_name || '',
         price: opt.price || 0,

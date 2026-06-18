@@ -261,6 +261,30 @@ export async function resolveRequest(id: number) {
   return fetchApi(`/service-requests/${id}/resolve`, { method: 'PATCH' });
 }
 
-// ── Generic fetch export for users page ──
+// ── Users API (Staff management) ──
+
+export const usersApi = {
+  getAll: async () => {
+    const res = await fetchApi('/users');
+    return res.data || res;
+  },
+  create: (data: {
+    username: string;
+    password: string;
+    full_name: string;
+    phone?: string;
+    roles: string[];
+  }) => fetchApi('/users', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id: number, data: {
+    full_name?: string;
+    phone?: string;
+    password?: string;
+    roles?: string[];
+  }) => fetchApi(`/users/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  toggleActive: (id: number) =>
+    fetchApi(`/users/${id}/toggle-active`, { method: 'PATCH' }),
+};
+
+// ── Generic fetch export for pages ──
 
 export { fetchApi as apiFetch };
