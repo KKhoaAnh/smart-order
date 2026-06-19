@@ -7,11 +7,12 @@ import {
   CheckCircle2,
   Calendar,
   Award,
+  Tag,
 } from 'lucide-react';
 import { ordersApi } from '@/app/lib/api';
 import { useAuthStore } from '@/app/stores/authStore';
 import { useAuth } from '@/app/hooks/useAuth';
-import { formatCurrency, parseApiDate } from '@/app/lib/format';
+import { formatCurrency, parseApiDate, getOrderAmounts } from '@/app/lib/format';
 import { cn } from '@/app/lib/utils';
 import AccessDenied from '@/app/components/ui/AccessDenied';
 import toast from 'react-hot-toast';
@@ -50,6 +51,8 @@ export default function ReportsPage() {
         const normalized = data.map((o: any) => ({
           ...o,
           total_amount: Number(o.total_amount) || 0,
+          discount_amount: Number(o.discount_amount) || 0,
+          final_amount: Number(o.final_amount) || Number(o.total_amount) || 0,
           items: (o.items || []).map((item: any) => ({
             ...item,
             price: Number(item.price) || 0,
@@ -85,12 +88,30 @@ export default function ReportsPage() {
     const paidOrders = filteredOrders.filter(
       (o) => o.order_status === 'COMPLETED' && o.payment_status === 'PAID'
     );
-    const totalRevenue = paidOrders.reduce((sum, o) => sum + (o.total_amount || 0), 0);
+    const totalRevenue = paidOrders.reduce(
+      (sum, o) => sum + getOrderAmounts(o).final,
+      0,
+    );
+    const totalDiscount = filteredOrders.reduce(
+      (sum, o) => sum + getOrderAmounts(o).discount,
+      0,
+    );
+    const ordersWithDiscount = filteredOrders.filter(
+      (o) => getOrderAmounts(o).discount > 0,
+    ).length;
     const totalOrders = filteredOrders.length;
     const avgOrder = paidOrders.length > 0 ? totalRevenue / paidOrders.length : 0;
     const completedOrders = filteredOrders.filter((o) => o.order_status === 'COMPLETED');
     const completionRate = totalOrders > 0 ? (completedOrders.length / totalOrders) * 100 : 0;
-    return { totalRevenue, totalOrders, avgOrder, completionRate, paidCount: paidOrders.length };
+    return {
+      totalRevenue,
+      totalDiscount,
+      ordersWithDiscount,
+      totalOrders,
+      avgOrder,
+      completionRate,
+      paidCount: paidOrders.length,
+    };
   }, [filteredOrders]);
 
   const topProducts = useMemo(() => {
@@ -121,7 +142,7 @@ export default function ReportsPage() {
       } else {
         key = `${date.getDate()}/${date.getMonth() + 1}`;
       }
-      dataMap.set(key, (dataMap.get(key) || 0) + (order.total_amount || 0));
+      dataMap.set(key, (dataMap.get(key) || 0) + getOrderAmounts(order).final);
     });
     return Array.from(dataMap.entries()).map(([name, revenue]) => ({ name, revenue }));
   }, [filteredOrders, timeFilter]);
@@ -137,12 +158,20 @@ export default function ReportsPage() {
 
   const statCards = [
     {
-      title: 'Tổng doanh thu',
+      title: 'Doanh thu thực thu',
       value: formatCurrency(stats.totalRevenue),
       subtitle: `${stats.paidCount} đơn đã thanh toán`,
       icon: DollarSign,
       color: 'text-success',
       bg: 'bg-success-bg',
+    },
+    {
+      title: 'Tổng giảm giá',
+      value: formatCurrency(stats.totalDiscount),
+      subtitle: `${stats.ordersWithDiscount} đơn có khuyến mãi`,
+      icon: Tag,
+      color: 'text-emerald-600',
+      bg: 'bg-emerald-50',
     },
     {
       title: 'Đơn hàng',
@@ -155,7 +184,7 @@ export default function ReportsPage() {
     {
       title: 'TB/đơn',
       value: formatCurrency(stats.avgOrder),
-      subtitle: 'Trung bình mỗi đơn',
+      subtitle: 'Trung bình thực thu/đơn',
       icon: TrendingUp,
       color: 'text-brand-primary',
       bg: 'bg-bg-secondary',
@@ -198,7 +227,7 @@ export default function ReportsPage() {
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         {statCards.map((card, idx) => (
           <div
             key={idx}
@@ -220,7 +249,7 @@ export default function ReportsPage() {
       {/* Revenue Chart */}
       <div className="bg-bg-card rounded-2xl p-6 border border-border animate-slide-in-up" style={{ animationDelay: '300ms' }}>
         <h3 className="text-lg font-semibold text-text-primary mb-4">
-          Doanh thu theo {timeFilter === 'today' ? 'giờ' : 'ngày'}
+          Doanh thu thực thu theo {timeFilter === 'today' ? 'giờ' : 'ngày'}
         </h3>
         <div className="h-80">
           {chartData.length > 0 ? (
@@ -232,7 +261,7 @@ export default function ReportsPage() {
                 <Tooltip
                   formatter={(value) => {
                     const amount = Number(value ?? 0);
-                    return [formatCurrency(amount), 'Doanh thu'];
+                    return [formatCurrency(amount), 'Doanh thu thực thu'];
                   }}
                   contentStyle={{
                     borderRadius: '12px',

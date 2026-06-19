@@ -15,6 +15,7 @@ import { TableSession } from './table-session.entity';
 import { OrderItem } from './order-item.entity';
 import { Payment } from './payment.entity';
 import { Customer } from './customer.entity';
+import { OrderPromotion } from './order-promotion.entity';
 
 @Entity('orders')
 export class Order {
@@ -35,6 +36,12 @@ export class Order {
 
   @Column({ type: 'decimal', precision: 12, scale: 0, default: 0 })
   total_amount: number;
+
+  @Column({ type: 'decimal', precision: 12, scale: 0, default: 0 })
+  discount_amount: number;
+
+  @Column({ type: 'decimal', precision: 12, scale: 0, default: 0 })
+  final_amount: number;
 
   @Column({
     type: 'enum',
@@ -84,4 +91,7 @@ export class Order {
   @ManyToOne(() => Customer, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'customer_id' })
   customer: Customer;
+
+  @OneToOne(() => OrderPromotion, (op) => op.order)
+  applied_promotion: OrderPromotion;
 }

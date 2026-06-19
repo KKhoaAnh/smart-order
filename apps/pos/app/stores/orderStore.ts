@@ -27,6 +27,8 @@ export interface POSOrder {
   order_status: string;
   payment_status: string;
   total_amount: number;
+  discount_amount?: number;
+  final_amount?: number;
   note?: string;
   reject_reason?: string;
   table_id: number;

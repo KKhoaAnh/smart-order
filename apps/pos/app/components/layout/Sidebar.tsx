@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   Coffee,
   Star,
+  Tag,
   PanelLeftOpen,
 } from 'lucide-react';
 import { useAuth } from '@/app/hooks/useAuth';
@@ -34,6 +35,7 @@ const menuItems: MenuItem[] = [
   { href: '/dashboard/menu', label: 'Thực đơn', icon: UtensilsCrossed, description: 'Xem & quản lý' },
   { href: '/dashboard/tables', label: 'Bàn & QR', icon: QrCode, description: 'Sơ đồ bàn' },
   { href: '/dashboard/reviews', label: 'Đánh giá', icon: Star, adminOnly: true, description: 'Feedback khách' },
+  { href: '/dashboard/promotions', label: 'Khuyến mãi', icon: Tag, adminOnly: true, description: 'Mã giảm giá' },
   { href: '/dashboard/reports', label: 'Báo cáo', icon: BarChart3, adminOnly: true, description: 'Thống kê' },
   { href: '/dashboard/users', label: 'Nhân viên', icon: Users, adminOnly: true, description: 'Quản lý' },
   { href: '/dashboard/settings', label: 'Cài đặt', icon: Settings, adminOnly: true, description: 'Hệ thống' },

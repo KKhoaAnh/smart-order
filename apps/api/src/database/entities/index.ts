@@ -22,3 +22,5 @@ export { ActivityLog } from './activity-log.entity';
 export { Customer } from './customer.entity';
 export { Review } from './review.entity';
 export { Favorite } from './favorite.entity';
+export { Promotion } from './promotion.entity';
+export { OrderPromotion } from './order-promotion.entity';

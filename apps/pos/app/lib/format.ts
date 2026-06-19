@@ -16,6 +16,18 @@ export function formatPrice(amount: number): string {
   return amount.toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + 'đ';
 }
 
+/** Chuẩn hoá số tiền đơn hàng (gốc / giảm / thực thu) */
+export function getOrderAmounts(order: {
+  total_amount?: number;
+  discount_amount?: number;
+  final_amount?: number;
+}) {
+  const total = Number(order.total_amount) || 0;
+  const discount = Number(order.discount_amount) || 0;
+  const final = Number(order.final_amount) || total - discount || total;
+  return { total, discount, final: Math.max(0, final) };
+}
+
 /** Format tiền lớn: 1500000 → "1.500.000đ" */
 export function formatCurrency(amount: number): string {
   return formatPrice(amount);

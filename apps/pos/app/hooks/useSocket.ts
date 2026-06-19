@@ -27,6 +27,8 @@ function normalizeOrder(raw: any): any {
   return {
     ...raw,
     total_amount: Number(raw.total_amount) || 0,
+    discount_amount: Number(raw.discount_amount) || 0,
+    final_amount: Number(raw.final_amount) || Number(raw.total_amount) || 0,
     created_at: raw.created_at || new Date().toISOString(),
     items: (raw.items || []).map((item: any) => ({
       ...item,

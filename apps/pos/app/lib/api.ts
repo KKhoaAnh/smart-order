@@ -235,6 +235,31 @@ export async function updateStore(data: any) {
   return storeApi.update(data);
 }
 
+// ── Promotions API (POS admin) ──
+
+export const promotionsApi = {
+  getAll: async (storeId: number) => {
+    const res = await fetchApi(`/promotions/store/${storeId}`);
+    return res.data || res;
+  },
+  getOne: async (id: number) => {
+    const res = await fetchApi(`/promotions/${id}`);
+    return res.data || res;
+  },
+  create: (storeId: number, data: Record<string, unknown>) =>
+    fetchApi(`/promotions/store/${storeId}`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  update: (id: number, data: Record<string, unknown>) =>
+    fetchApi(`/promotions/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+  delete: (id: number) =>
+    fetchApi(`/promotions/${id}`, { method: 'DELETE' }),
+};
+
 // ── Reviews API (POS admin) ──
 
 export async function getStoreReviews(storeId: number) {

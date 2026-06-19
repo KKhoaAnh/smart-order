@@ -13,11 +13,13 @@ import { Payment } from '../../database/entities/payment.entity';
 import { Customer } from '../../database/entities/customer.entity';
 import { TablesModule } from '../tables/tables.module';
 import { CustomerAuthModule } from '../customer-auth/customer-auth.module';
+import { PromotionsModule } from '../promotions/promotions.module';
 
 @Module({
   imports: [
     TablesModule,
     CustomerAuthModule,
+    PromotionsModule,
     TypeOrmModule.forFeature([
       Order,
       OrderItem,

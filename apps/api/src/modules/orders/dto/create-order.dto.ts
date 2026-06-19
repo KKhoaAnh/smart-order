@@ -35,6 +35,10 @@ export class CreateOrderDto {
   @IsNumber()
   @IsOptional()
   customer_id?: number;
+
+  @IsString()
+  @IsOptional()
+  coupon_code?: string;
 }
 
 export class AddOrderItemsDto {

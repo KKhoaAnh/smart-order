@@ -113,6 +113,14 @@ export function onTableStatusChanged(callback: EventCallback) {
   socket?.on(SocketEvents.TABLE_STATUS_CHANGED, callback);
 }
 
+export function onPromotionUsageUpdated(callback: EventCallback) {
+  socket?.on(SocketEvents.PROMOTION_USAGE_UPDATED, callback);
+}
+
+export function offPromotionUsageUpdated(callback: EventCallback) {
+  socket?.off(SocketEvents.PROMOTION_USAGE_UPDATED, callback);
+}
+
 export function removeAllSocketListeners() {
   const events = [
     SocketEvents.NEW_ORDER,
@@ -123,6 +131,7 @@ export function removeAllSocketListeners() {
     SocketEvents.SERVICE_REQUEST_CREATED,
     SocketEvents.MENU_UPDATED,
     SocketEvents.TABLE_STATUS_CHANGED,
+    SocketEvents.PROMOTION_USAGE_UPDATED,
   ];
   events.forEach((event) => socket?.off(event));
 }

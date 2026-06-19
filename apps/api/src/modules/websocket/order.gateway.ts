@@ -214,6 +214,22 @@ export class OrderGateway
   }
 
   /**
+   * Khuyến mãi được sử dụng — cập nhật POS promotions dashboard
+   */
+  emitPromotionUsageUpdated(
+    storeId: number,
+    data: { promotion_id: number; usage_count: number; discount_amount: number },
+  ) {
+    const room = `store:${storeId}`;
+    this.server.to(room).emit('promotion_usage_updated', {
+      type: 'PROMOTION_USAGE_UPDATED',
+      data,
+      timestamp: new Date().toISOString(),
+    });
+    this.logger.log(`🎟️ promotion_usage_updated emitted to ${room}`);
+  }
+
+  /**
    * Menu cập nhật — gửi cho tất cả Customer trong store
    */
   emitMenuUpdated(storeId: number) {

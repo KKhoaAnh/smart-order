@@ -108,6 +108,7 @@ export enum SocketEvents {
   ORDER_ITEMS_ADDED = 'order_items_added',
   SERVICE_REQUEST_CREATED = 'service_request_created',
   TABLE_STATUS_CHANGED = 'table_status_changed',
+  PROMOTION_USAGE_UPDATED = 'promotion_usage_updated',
 
   // Server → Customer
   ORDER_STATUS_CHANGED = 'order_status_changed',
@@ -121,4 +122,12 @@ export enum SocketEvents {
   JOIN_STORE_ROOM = 'join_store_room',
   JOIN_SESSION_ROOM = 'join_session_room',
   LEAVE_ROOM = 'leave_room',
+}
+
+// --- Promotion ---
+
+export enum PromotionType {
+  PERCENT = 'PERCENT',       // Giảm theo phần trăm
+  FIXED = 'FIXED',           // Giảm số tiền cố định
+  FREE_ITEM = 'FREE_ITEM',   // Tặng sản phẩm miễn phí
 }

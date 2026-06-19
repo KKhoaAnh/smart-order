@@ -33,6 +33,8 @@ export interface TrackedOrder {
   paymentStatus: string;
   items: TrackedOrderItem[];
   totalAmount: number;
+  discountAmount: number;
+  finalAmount: number;
   createdAt: string;
 }
 

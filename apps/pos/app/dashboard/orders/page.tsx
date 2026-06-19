@@ -8,7 +8,7 @@ import {
 import { ordersApi } from '@/app/lib/api';
 import { useAuthStore } from '@/app/stores/authStore';
 import { useOrderStore } from '@/app/stores/orderStore';
-import { formatCurrency, formatTime, formatDate } from '@/app/lib/format';
+import { formatCurrency, formatTime, formatDate, getOrderAmounts } from '@/app/lib/format';
 import {
   ORDER_TIME_SECTIONS,
   groupOrdersByTimeSection,
@@ -78,6 +78,26 @@ function getItemNames(items: any[]): string {
     return `${names} +${items.length - 3} món khác`;
   }
   return names;
+}
+
+function OrderAmountDisplay({ order }: { order: { total_amount?: number; discount_amount?: number; final_amount?: number } }) {
+  const { total, discount, final } = getOrderAmounts(order);
+
+  if (discount > 0) {
+    return (
+      <div className="text-right">
+        <p className="text-xs text-text-muted line-through">{formatCurrency(total)}</p>
+        <p className="text-lg font-bold text-brand-primary">{formatCurrency(final)}</p>
+        <p className="text-[10px] font-semibold text-success">Giảm {formatCurrency(discount)}</p>
+      </div>
+    );
+  }
+
+  return (
+    <span className="text-lg font-bold text-brand-primary">
+      {formatCurrency(total)}
+    </span>
+  );
 }
 
 function OrderCard({
@@ -156,9 +176,7 @@ function OrderCard({
       </div>
 
       <div className="flex items-center justify-between pt-3 border-t border-border-light">
-        <span className="text-lg font-bold text-brand-primary">
-          {formatCurrency(order.total_amount)}
-        </span>
+        <OrderAmountDisplay order={order} />
         <div className="flex gap-2">
           {orderStatus === 'PENDING' && (
             <>
@@ -226,6 +244,8 @@ export default function OrdersPage() {
         const normalized = data.map((o: any) => ({
           ...o,
           total_amount: Number(o.total_amount) || 0,
+          discount_amount: Number(o.discount_amount) || 0,
+          final_amount: Number(o.final_amount) || Number(o.total_amount) || 0,
           items: (o.items || []).map((item: any) => ({
             ...item,
             price: Number(item.price) || 0,
@@ -364,6 +384,8 @@ export default function OrdersPage() {
       setSelectedOrder({
         ...detail,
         total_amount: Number(detail.total_amount) || 0,
+        discount_amount: Number(detail.discount_amount) || 0,
+        final_amount: Number(detail.final_amount) || Number(detail.total_amount) || 0,
         items: (detail.items || []).map((item: any) => ({
           ...item,
           price: Number(item.price) || 0,
@@ -672,13 +694,34 @@ export default function OrdersPage() {
               </div>
 
               {/* Total */}
-              <div className="border-t border-border pt-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-lg font-bold text-text-primary">Tổng cộng</span>
-                  <span className="text-xl font-bold text-brand-primary">
-                    {formatCurrency(selectedOrder.total_amount)}
-                  </span>
-                </div>
+              <div className="border-t border-border pt-4 space-y-2">
+                {(() => {
+                  const { total, discount, final } = getOrderAmounts(selectedOrder);
+                  if (discount > 0) {
+                    return (
+                      <>
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-text-secondary">Tạm tính</span>
+                          <span className="text-text-secondary">{formatCurrency(total)}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-success">Giảm giá</span>
+                          <span className="font-semibold text-success">-{formatCurrency(discount)}</span>
+                        </div>
+                        <div className="flex justify-between items-center pt-2 border-t border-border-light">
+                          <span className="text-lg font-bold text-text-primary">Tổng thanh toán</span>
+                          <span className="text-xl font-bold text-brand-primary">{formatCurrency(final)}</span>
+                        </div>
+                      </>
+                    );
+                  }
+                  return (
+                    <div className="flex justify-between items-center">
+                      <span className="text-lg font-bold text-text-primary">Tổng cộng</span>
+                      <span className="text-xl font-bold text-brand-primary">{formatCurrency(total)}</span>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Actions */}

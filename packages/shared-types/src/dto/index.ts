@@ -3,7 +3,7 @@
 // Dùng cho API request/response giữa FE ↔ BE
 // ============================================================
 
-import { PaymentMethod } from '../enums';
+import { PaymentMethod, PromotionType } from '../enums';
 
 // --- Session ---
 
@@ -42,6 +42,7 @@ export interface CreateOrderDto {
   session_token: string;
   items: CreateOrderItemDto[];
   customer_id?: number;
+  coupon_code?: string;
 }
 
 
@@ -148,4 +149,59 @@ export interface CreateServiceRequestDto {
   session_token: string;
   request_type: string;
   message?: string;
+}
+
+// --- Promotions ---
+
+export interface ValidateCouponDto {
+  code: string;
+  store_id: number;
+  order_amount: number;
+  customer_id?: number;
+}
+
+export interface ValidateCouponResponseDto {
+  valid: boolean;
+  promotion_name?: string;
+  discount_type?: PromotionType;
+  discount_value?: number;
+  discount_amount?: number;
+  min_order_amount?: number;
+  message?: string;
+}
+
+export interface PromotionDto {
+  id: number;
+  store_id: number;
+  name: string;
+  description?: string;
+  type: PromotionType;
+  value: number;
+  code?: string;
+  min_order_amount: number;
+  max_discount?: number;
+  usage_limit?: number;
+  usage_count: number;
+  per_customer_limit: number;
+  start_date: string;
+  end_date: string;
+  is_active: boolean;
+  free_product_id?: number;
+  created_at: string;
+}
+
+export interface CreatePromotionDto {
+  name: string;
+  description?: string;
+  type: PromotionType;
+  value: number;
+  code?: string;
+  min_order_amount?: number;
+  max_discount?: number;
+  usage_limit?: number;
+  per_customer_limit?: number;
+  start_date: string;
+  end_date: string;
+  is_active?: boolean;
+  free_product_id?: number;
 }

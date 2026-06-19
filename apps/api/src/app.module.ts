@@ -21,6 +21,7 @@ import { CustomerAuthModule } from './modules/customer-auth/customer-auth.module
 import { ReviewsModule } from './modules/reviews/reviews.module';
 import { FavoritesModule } from './modules/favorites/favorites.module';
 import { UsersModule } from './modules/users/users.module';
+import { PromotionsModule } from './modules/promotions/promotions.module';
 
 @Module({
   imports: [
@@ -69,6 +70,7 @@ import { UsersModule } from './modules/users/users.module';
     ReviewsModule,
     FavoritesModule,
     UsersModule,
+    PromotionsModule,
   ],
   controllers: [],
   providers: [

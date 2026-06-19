@@ -10,7 +10,7 @@ import type { CreateOrderItemDto } from 'shared-types';
 import toast from 'react-hot-toast';
 
 interface UseOrderReturn {
-  submitOrder: () => Promise<number | null>;
+  submitOrder: (couponCode?: string) => Promise<number | null>;
   addMoreItems: () => Promise<boolean>;
   fetchOrdersBySession: () => Promise<void>;
   fetchOrderDetail: (orderId: number) => Promise<void>;
@@ -39,7 +39,7 @@ export function useOrder(): UseOrderReturn {
   }, [cartItems]);
 
   // Submit a new order
-  const submitOrder = useCallback(async (): Promise<number | null> => {
+  const submitOrder = useCallback(async (couponCode?: string): Promise<number | null> => {
     if (!sessionToken) {
       toast.error('Phiên đặt món đã hết hạn');
       return null;
@@ -58,6 +58,7 @@ export function useOrder(): UseOrderReturn {
         session_token: sessionToken,
         items: cartToOrderItems(),
         customer_id: isAuthenticated && customer ? customer.id : undefined,
+        coupon_code: couponCode || undefined,
       });
 
       // Map response to TrackedOrder
@@ -168,6 +169,13 @@ function mapOrderResponse(data: any) {
     status: data.order_status || data.status || 'PENDING',
     paymentStatus: data.payment_status || data.paymentStatus || 'UNPAID',
     totalAmount: data.total_amount || data.totalAmount || 0,
+    discountAmount: data.discount_amount || data.discountAmount || 0,
+    finalAmount:
+      data.final_amount ||
+      data.finalAmount ||
+      data.total_amount ||
+      data.totalAmount ||
+      0,
     createdAt: data.created_at || data.createdAt || new Date().toISOString(),
     items: (data.items || data.order_items || []).map((item: any) => ({
       id: item.id,

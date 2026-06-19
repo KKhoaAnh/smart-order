@@ -217,6 +217,31 @@ export function getFrequentProducts(token: string): Promise<any[]> {
 }
 
 /* ============================================================
+   Promotions & Coupons
+   ============================================================ */
+
+export function validateCoupon(
+  code: string,
+  storeId: number,
+  orderAmount: number,
+  customerId?: number,
+): Promise<any> {
+  return apiFetch('promotions/validate', {
+    method: 'POST',
+    body: JSON.stringify({
+      code,
+      store_id: storeId,
+      order_amount: orderAmount,
+      customer_id: customerId,
+    }),
+  });
+}
+
+export function getActivePromotions(storeId: number): Promise<any[]> {
+  return apiFetch<any[]>(`promotions/store/${storeId}/active`);
+}
+
+/* ============================================================
    Customer Auth
    ============================================================ */
 

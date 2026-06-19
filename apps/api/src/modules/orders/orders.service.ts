@@ -14,6 +14,7 @@ import { OrderGateway } from '../websocket/order.gateway';
 import { TablesService } from '../tables/tables.service';
 import { serializeDates } from '../../common/utils/serialize-dates';
 import { Customer } from '../../database/entities/customer.entity';
+import { PromotionsService } from '../promotions/promotions.service';
 
 @Injectable()
 export class OrdersService {
@@ -37,6 +38,7 @@ export class OrdersService {
     private readonly dataSource: DataSource,
     private readonly orderGateway: OrderGateway,
     private readonly tablesService: TablesService,
+    private readonly promotionsService: PromotionsService,
   ) {}
 
   // ── Tạo đơn hàng mới ──
@@ -90,10 +92,37 @@ export class OrdersService {
 
       // 6. Cập nhật total
       saved.total_amount = totalAmount;
+      saved.discount_amount = 0;
+      saved.final_amount = totalAmount;
       await manager.save(Order, saved);
 
       return saved;
     });
+
+    // 6.5. Áp dụng khuyến mãi (ngoài transaction để tránh deadlock)
+    if (dto.coupon_code) {
+      try {
+        const promoResult = await this.promotionsService.applyPromotion(
+          dto.coupon_code,
+          savedOrder.store_id,
+          Number(savedOrder.total_amount),
+          savedOrder.id,
+          dto.customer_id,
+        );
+        savedOrder.discount_amount = promoResult.discount_amount;
+        savedOrder.final_amount = Number(savedOrder.total_amount) - promoResult.discount_amount;
+        await this.orderRepo.save(savedOrder);
+        this.orderGateway.emitPromotionUsageUpdated(savedOrder.store_id, {
+          promotion_id: promoResult.promotion_id,
+          usage_count: promoResult.usage_count,
+          discount_amount: promoResult.discount_amount,
+        });
+      } catch (err: unknown) {
+        // Nếu mã không hợp lệ, vẫn tạo đơn nhưng không giảm giá
+        const message = err instanceof Error ? err.message : 'Unknown error';
+        console.warn('Coupon apply failed:', message);
+      }
+    }
 
     // 7. Lấy chi tiết (sau khi transaction commit)
     const detail = await this.getOrderDetail(savedOrder.id);
@@ -177,6 +206,8 @@ export class OrdersService {
     return serializeDates({
       ...order,
       total_amount: Number(order.total_amount),
+      discount_amount: Number(order.discount_amount || 0),
+      final_amount: Number(order.final_amount || order.total_amount),
       items: order.items.map((item) => ({
         ...item,
         price: Number(item.price),
@@ -298,7 +329,7 @@ export class OrdersService {
     const payment = new Payment();
     payment.order_id = orderId;
     payment.payment_method = 'CASH';
-    payment.amount = order.total_amount;
+    payment.amount = Number(order.final_amount || order.total_amount);
     payment.status = 'SUCCESS';
     payment.paid_at = new Date();
     await this.paymentRepo.save(payment);
@@ -426,6 +457,8 @@ export class OrdersService {
     return orders.map((order) => serializeDates({
       ...order,
       total_amount: Number(order.total_amount),
+      discount_amount: Number(order.discount_amount || 0),
+      final_amount: Number(order.final_amount || order.total_amount),
       items: order.items.map((item) => ({
         ...item,
         price: Number(item.price),

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, Store, Heart, Clock, Sparkles } from 'lucide-react';
@@ -10,11 +10,13 @@ import { useCustomerAuthStore } from '../../../store/customer-auth-store';
 import { useMenu } from '../../../hooks/useMenu';
 import { useFavorites } from '../../../hooks/useFavorites';
 import { useHistory } from '../../../hooks/useHistory';
+import { getActivePromotions } from '../../../lib/api';
 import { SearchBar } from './components/SearchBar';
 import { CategoryTabs } from './components/CategoryTabs';
 import { ProductCard } from './components/ProductCard';
 import { ProductDetailSheet } from './components/ProductDetailSheet';
 import { FloatingCartButton } from './components/FloatingCartButton';
+import { PromotionBanner, type ActivePromotion } from './components/PromotionBanner';
 import { Skeleton } from '../../../components/ui/Skeleton';
 import { SessionExpired } from '../../../components/states/SessionExpired';
 import { NetworkError } from '../../../components/states/NetworkError';
@@ -45,12 +47,20 @@ export default function MenuPage() {
   const [selectedProduct, setSelectedProduct] = useState<MenuProductDto | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [activePromotions, setActivePromotions] = useState<ActivePromotion[]>([]);
   const categoryRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
   // Favorites & history (chỉ khi đã đăng nhập)
   const { isAuthenticated } = useCustomerAuthStore();
   const { favoriteIds, isFavorite, toggleFavorite } = useFavorites();
   const { frequentProducts } = useHistory();
+
+  useEffect(() => {
+    if (!storeInfo?.id) return;
+    getActivePromotions(storeInfo.id)
+      .then((data) => setActivePromotions(Array.isArray(data) ? data : []))
+      .catch(() => setActivePromotions([]));
+  }, [storeInfo?.id]);
 
   // Lọc danh mục theo yêu thích
   const displayCategories = useMemo(() => {
@@ -215,6 +225,11 @@ export default function MenuPage() {
           </div>
         )}
       </div>
+
+      {/* Promotion — ngoài sticky header để tránh giật khi cuộn */}
+      {!searchQuery && activePromotions.length > 0 && (
+        <PromotionBanner promotions={activePromotions} />
+      )}
 
       {/* Menu Content */}
       <div style={{ padding: '16px 16px 0' }}>

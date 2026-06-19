@@ -102,7 +102,7 @@ export default function TrackingPage() {
             transition={{ delay: 0.7 }}
             style={{ fontSize: 22, fontWeight: 700, color: '#6F4E37', marginBottom: 28 }}
           >
-            {formatPrice(currentOrder?.totalAmount || 0)}
+            {formatPrice(currentOrder?.finalAmount || currentOrder?.totalAmount || 0)}
           </motion.p>
 
           <motion.div
@@ -303,9 +303,6 @@ export default function TrackingPage() {
           {/* Total */}
           <div
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
               marginTop: 16,
               padding: '14px 16px',
               backgroundColor: '#FFFFFF',
@@ -313,10 +310,64 @@ export default function TrackingPage() {
               border: '1px solid #E8E0D8',
             }}
           >
-            <span style={{ fontSize: 15, fontWeight: 600, color: '#1A1A1A' }}>Tổng cộng</span>
-            <span style={{ fontSize: 20, fontWeight: 800, color: '#6F4E37' }}>
-              {formatPrice(currentOrder.totalAmount)}
-            </span>
+            {currentOrder.discountAmount > 0 ? (
+              <>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: 6,
+                  }}
+                >
+                  <span style={{ fontSize: 14, color: '#6B6B6B' }}>Tạm tính</span>
+                  <span style={{ fontSize: 14, color: '#6B6B6B' }}>
+                    {formatPrice(currentOrder.totalAmount)}
+                  </span>
+                </div>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: 8,
+                  }}
+                >
+                  <span style={{ fontSize: 14, color: '#16A34A' }}>Giảm giá</span>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: '#16A34A' }}>
+                    -{formatPrice(currentOrder.discountAmount)}
+                  </span>
+                </div>
+                <div style={{ borderTop: '1px dashed #E8E0D8', marginBottom: 8 }} />
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <span style={{ fontSize: 15, fontWeight: 600, color: '#1A1A1A' }}>
+                    Tổng thanh toán
+                  </span>
+                  <span style={{ fontSize: 20, fontWeight: 800, color: '#6F4E37' }}>
+                    {formatPrice(currentOrder.finalAmount || currentOrder.totalAmount)}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <span style={{ fontSize: 15, fontWeight: 600, color: '#1A1A1A' }}>Tổng cộng</span>
+                <span style={{ fontSize: 20, fontWeight: 800, color: '#6F4E37' }}>
+                  {formatPrice(currentOrder.totalAmount)}
+                </span>
+              </div>
+            )}
           </div>
         </motion.div>
       </div>
