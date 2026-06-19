@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Flame, ImageOff, Star } from 'lucide-react';
+import { Flame, ImageOff, Star, Heart } from 'lucide-react';
 import { formatPrice } from '../../../../lib/format';
 import type { MenuProductDto } from 'shared-types';
 
@@ -9,9 +9,11 @@ interface ProductCardProps {
   product: MenuProductDto;
   onClick: () => void;
   cartQuantity?: number;
+  isFavorite?: boolean;
+  onToggleFavorite?: (e: React.MouseEvent) => void;
 }
 
-export function ProductCard({ product, onClick, cartQuantity }: ProductCardProps) {
+export function ProductCard({ product, onClick, cartQuantity, isFavorite, onToggleFavorite }: ProductCardProps) {
   const isUnavailable = !product.is_available;
 
   // Get the starting price (base + default variant adjustment)
@@ -184,7 +186,7 @@ export function ProductCard({ product, onClick, cartQuantity }: ProductCardProps
           style={{
             position: 'absolute',
             top: 8,
-            right: 8,
+            right: onToggleFavorite ? 34 : 8,
             width: 22,
             height: 22,
             borderRadius: '50%',
@@ -198,6 +200,37 @@ export function ProductCard({ product, onClick, cartQuantity }: ProductCardProps
           }}
         >
           {cartQuantity}
+        </motion.div>
+      )}
+
+      {/* Favorite Heart Button */}
+      {onToggleFavorite && (
+        <motion.div
+          whileTap={{ scale: 0.8 }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleFavorite(e);
+          }}
+          style={{
+            position: 'absolute',
+            top: 8,
+            right: 8,
+            width: 26,
+            height: 26,
+            borderRadius: '50%',
+            backgroundColor: isFavorite ? '#FEF2F2' : 'rgba(255,255,255,0.9)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
+          }}
+        >
+          <Heart
+            size={14}
+            color={isFavorite ? '#EF4444' : '#9CA3AF'}
+            fill={isFavorite ? '#EF4444' : 'none'}
+          />
         </motion.div>
       )}
     </motion.button>

@@ -21,3 +21,4 @@ export { Notification } from './notification.entity';
 export { ActivityLog } from './activity-log.entity';
 export { Customer } from './customer.entity';
 export { Review } from './review.entity';
+export { Favorite } from './favorite.entity';

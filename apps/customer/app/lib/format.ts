@@ -73,7 +73,7 @@ export function getRelativeTime(date: string | Date): string {
   const diffSec = Math.floor(diffMs / 1000);
 
   if (diffSec < 30) {
-    return 'vừa xong';
+    return 'Vừa xong';
   }
 
   if (diffSec < 60) {

@@ -19,6 +19,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { WebsocketModule } from './modules/websocket/websocket.module';
 import { CustomerAuthModule } from './modules/customer-auth/customer-auth.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
+import { FavoritesModule } from './modules/favorites/favorites.module';
 import { UsersModule } from './modules/users/users.module';
 
 @Module({
@@ -66,6 +67,7 @@ import { UsersModule } from './modules/users/users.module';
     NotificationsModule,
     CustomerAuthModule,
     ReviewsModule,
+    FavoritesModule,
     UsersModule,
   ],
   controllers: [],

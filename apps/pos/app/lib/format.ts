@@ -48,7 +48,7 @@ export function formatDateTime(date: string | Date): string {
   return formatDateTimeVN(date);
 }
 
-/** Format tương đối: → "vừa xong", "5 phút trước" */
+/** Format tương đối: → "Vừa xong", "5 phút trước" */
 export function getRelativeTime(date: string | Date): string {
   const now = Date.now();
   const then = parseApiDate(date).getTime();
@@ -58,7 +58,7 @@ export function getRelativeTime(date: string | Date): string {
   const diffHour = Math.floor(diffMin / 60);
   const diffDay = Math.floor(diffHour / 24);
 
-  if (diffSec < 60) return 'vừa xong';
+  if (diffSec < 60) return 'Vừa xong';
   if (diffMin < 60) return `${diffMin} phút trước`;
   if (diffHour < 24) return `${diffHour} giờ trước`;
   if (diffDay < 7) return `${diffDay} ngày trước`;

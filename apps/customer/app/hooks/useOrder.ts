@@ -5,6 +5,7 @@ import { createOrder, addOrderItems, getOrdersBySession, getOrderDetail } from '
 import { useCartStore } from '../store/cart-store';
 import { useSessionStore } from '../store/session-store';
 import { useOrderStore } from '../store/order-store';
+import { useCustomerAuthStore } from '../store/customer-auth-store';
 import type { CreateOrderItemDto } from 'shared-types';
 import toast from 'react-hot-toast';
 
@@ -24,6 +25,7 @@ export function useOrder(): UseOrderReturn {
   const { sessionToken } = useSessionStore();
   const { items: cartItems, clearCart } = useCartStore();
   const { currentOrder, setOrder, setLoading } = useOrderStore();
+  const { customer, isAuthenticated } = useCustomerAuthStore();
 
   // Convert cart items to API format
   const cartToOrderItems = useCallback((): CreateOrderItemDto[] => {
@@ -55,6 +57,7 @@ export function useOrder(): UseOrderReturn {
       const orderData = await createOrder({
         session_token: sessionToken,
         items: cartToOrderItems(),
+        customer_id: isAuthenticated && customer ? customer.id : undefined,
       });
 
       // Map response to TrackedOrder
@@ -73,7 +76,7 @@ export function useOrder(): UseOrderReturn {
     } finally {
       setIsSubmitting(false);
     }
-  }, [sessionToken, cartItems, cartToOrderItems, clearCart, setOrder]);
+  }, [sessionToken, cartItems, cartToOrderItems, clearCart, setOrder, customer, isAuthenticated]);
 
   // Add more items to existing order
   const addMoreItems = useCallback(async (): Promise<boolean> => {

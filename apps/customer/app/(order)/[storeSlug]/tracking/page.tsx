@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ChevronLeft, Plus, Bell, Coffee, Heart } from 'lucide-react';
+import { ChevronLeft, Plus, Bell, Coffee, Heart, Clock } from 'lucide-react';
 import { useSessionStore } from '../../../store/session-store';
+import { useCustomerAuthStore } from '../../../store/customer-auth-store';
 import { useOrderStore } from '../../../store/order-store';
 import { useOrder } from '../../../hooks/useOrder';
 import { OrderTimeline } from './components/OrderTimeline';
@@ -20,6 +21,7 @@ export default function TrackingPage() {
   const storeSlug = params.storeSlug as string;
 
   const { isInitialized, tableInfo, storeInfo } = useSessionStore();
+  const { isAuthenticated } = useCustomerAuthStore();
   const { currentOrder, isLoading: orderLoading } = useOrderStore();
   const { fetchOrdersBySession } = useOrder();
   const [showServicePopup, setShowServicePopup] = useState(false);
@@ -113,6 +115,35 @@ export default function TrackingPage() {
             <Coffee size={14} />
             <span>{storeInfo?.name}</span>
           </motion.div>
+
+          {/* Nút xem lịch sử đơn hàng */}
+          {isAuthenticated && (
+            <motion.button
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => router.push(`/${storeSlug}/history`)}
+              style={{
+                marginTop: 24,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '10px 20px',
+                borderRadius: 12,
+                border: '1px solid #E8E0D8',
+                backgroundColor: '#FFFFFF',
+                color: '#6B6B6B',
+                fontSize: 13,
+                fontWeight: 500,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+              }}
+            >
+              <Clock size={14} />
+              Xem lịch sử đơn hàng
+            </motion.button>
+          )}
         </motion.div>
       </div>
     );

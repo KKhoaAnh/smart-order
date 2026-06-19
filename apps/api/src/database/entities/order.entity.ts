@@ -14,6 +14,7 @@ import { Table } from './table.entity';
 import { TableSession } from './table-session.entity';
 import { OrderItem } from './order-item.entity';
 import { Payment } from './payment.entity';
+import { Customer } from './customer.entity';
 
 @Entity('orders')
 export class Order {
@@ -76,4 +77,11 @@ export class Order {
 
   @OneToOne(() => Payment, (payment) => payment.order)
   payment: Payment;
+
+  @Column({ nullable: true })
+  customer_id: number;
+
+  @ManyToOne(() => Customer, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'customer_id' })
+  customer: Customer;
 }

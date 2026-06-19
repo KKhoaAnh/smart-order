@@ -1,12 +1,15 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, Store } from 'lucide-react';
+import { ChevronLeft, Store, Heart, Clock, Sparkles } from 'lucide-react';
 import { useSessionStore } from '../../../store/session-store';
 import { useCartStore } from '../../../store/cart-store';
+import { useCustomerAuthStore } from '../../../store/customer-auth-store';
 import { useMenu } from '../../../hooks/useMenu';
+import { useFavorites } from '../../../hooks/useFavorites';
+import { useHistory } from '../../../hooks/useHistory';
 import { SearchBar } from './components/SearchBar';
 import { CategoryTabs } from './components/CategoryTabs';
 import { ProductCard } from './components/ProductCard';
@@ -41,7 +44,24 @@ export default function MenuPage() {
 
   const [selectedProduct, setSelectedProduct] = useState<MenuProductDto | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const categoryRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+
+  // Favorites & history (chỉ khi đã đăng nhập)
+  const { isAuthenticated } = useCustomerAuthStore();
+  const { favoriteIds, isFavorite, toggleFavorite } = useFavorites();
+  const { frequentProducts } = useHistory();
+
+  // Lọc danh mục theo yêu thích
+  const displayCategories = useMemo(() => {
+    if (!showFavoritesOnly) return filteredCategories;
+    return filteredCategories
+      .map((cat) => ({
+        ...cat,
+        products: cat.products.filter((p) => favoriteIds.includes(p.id)),
+      }))
+      .filter((cat) => cat.products.length > 0);
+  }, [filteredCategories, showFavoritesOnly, favoriteIds]);
 
   // If not initialized, show session expired
   if (!isInitialized) {
@@ -129,6 +149,52 @@ export default function MenuPage() {
           <div style={{ width: 30 }} /> {/* Spacer for centering */}
         </div>
 
+        {/* Quick filter: Favorites + History (only if authenticated) */}
+        {isAuthenticated && (
+          <div style={{ display: 'flex', gap: 8, padding: '0 16px 8px' }}>
+            <button
+              onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4,
+                padding: '6px 12px',
+                borderRadius: 20,
+                border: showFavoritesOnly ? '1.5px solid #EF4444' : '1px solid #E8E0D8',
+                backgroundColor: showFavoritesOnly ? '#FEF2F2' : '#FFFFFF',
+                color: showFavoritesOnly ? '#EF4444' : '#6B6B6B',
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+              }}
+            >
+              <Heart size={12} fill={showFavoritesOnly ? '#EF4444' : 'none'} />
+              Yêu thích {favoriteIds.length > 0 && `(${favoriteIds.length})`}
+            </button>
+            <button
+              onClick={() => router.push(`/${storeSlug}/history`)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4,
+                padding: '6px 12px',
+                borderRadius: 20,
+                border: '1px solid #E8E0D8',
+                backgroundColor: '#FFFFFF',
+                color: '#6B6B6B',
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+              }}
+            >
+              <Clock size={12} />
+              Lịch sử
+            </button>
+          </div>
+        )}
+
         {/* Search Bar */}
         <div style={{ padding: '0 16px 10px' }}>
           <SearchBar
@@ -159,22 +225,86 @@ export default function MenuPage() {
               <Skeleton key={i} variant="card" />
             ))}
           </div>
-        ) : filteredCategories.length === 0 ? (
-          /* Empty search results */
+        ) : displayCategories.length === 0 ? (
+          /* Empty search/filter results */
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="flex flex-col items-center justify-center py-20 text-center"
           >
-            <Store size={40} color="#D4B896" strokeWidth={1.5} />
-            <p style={{ fontSize: 15, color: '#6B6B6B', marginTop: 16 }}>
-              {searchQuery ? `Không tìm thấy "${searchQuery}"` : 'Chưa có sản phẩm nào'}
-            </p>
+            {showFavoritesOnly ? (
+              <>
+                <Heart size={40} color="#D4B896" strokeWidth={1.5} />
+                <p style={{ fontSize: 15, color: '#6B6B6B', marginTop: 16 }}>
+                  Chưa có món yêu thích nào
+                </p>
+                <p style={{ fontSize: 13, color: '#9CA3AF', marginTop: 4 }}>
+                  Nhấn ❤️ trên sản phẩm để thêm vào yêu thích
+                </p>
+              </>
+            ) : (
+              <>
+                <Store size={40} color="#D4B896" strokeWidth={1.5} />
+                <p style={{ fontSize: 15, color: '#6B6B6B', marginTop: 16 }}>
+                  {searchQuery ? `Không tìm thấy "${searchQuery}"` : 'Chưa có sản phẩm nào'}
+                </p>
+              </>
+            )}
           </motion.div>
         ) : (
           /* Product list by category */
           <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
-            {filteredCategories.map((category, catIndex) => (
+            {/* Frequent products section */}
+            {!searchQuery && !showFavoritesOnly && isAuthenticated && frequentProducts.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <div className="flex items-center gap-2" style={{ marginBottom: 12 }}>
+                  <Sparkles size={18} color="#D97706" />
+                  <h2
+                    style={{
+                      fontSize: 18,
+                      fontWeight: 700,
+                      color: '#1A1A1A',
+                      margin: 0,
+                      fontFamily: "'Playfair Display', serif",
+                    }}
+                  >
+                    Thường đặt
+                  </h2>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {frequentProducts.slice(0, 3).map((fp, fpIndex) => {
+                    // Tìm product trong allProducts để có đầy đủ data cho ProductDetailSheet
+                    const fullProduct = filteredCategories
+                      .flatMap((c) => c.products)
+                      .find((p) => p.id === fp.product_id);
+                    if (!fullProduct) return null;
+
+                    return (
+                      <motion.div
+                        key={fp.product_id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: fpIndex * 0.05 }}
+                      >
+                        <ProductCard
+                          product={fullProduct}
+                          onClick={() => handleProductClick(fullProduct)}
+                          cartQuantity={getCartQuantity(fullProduct.id)}
+                          isFavorite={isFavorite(fullProduct.id)}
+                          onToggleFavorite={() => toggleFavorite(fullProduct.id)}
+                        />
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+
+            {displayCategories.map((category, catIndex) => (
               <motion.div
                 key={category.id}
                 ref={(el) => {
@@ -213,6 +343,8 @@ export default function MenuPage() {
                         product={product}
                         onClick={() => handleProductClick(product)}
                         cartQuantity={getCartQuantity(product.id)}
+                        isFavorite={isAuthenticated ? isFavorite(product.id) : undefined}
+                        onToggleFavorite={isAuthenticated ? () => toggleFavorite(product.id) : undefined}
                       />
                     </motion.div>
                   ))}

@@ -10,11 +10,14 @@ import { ProductVariant } from '../../database/entities/product-variant.entity';
 import { Option } from '../../database/entities/option.entity';
 import { TableSession } from '../../database/entities/table-session.entity';
 import { Payment } from '../../database/entities/payment.entity';
+import { Customer } from '../../database/entities/customer.entity';
 import { TablesModule } from '../tables/tables.module';
+import { CustomerAuthModule } from '../customer-auth/customer-auth.module';
 
 @Module({
   imports: [
     TablesModule,
+    CustomerAuthModule,
     TypeOrmModule.forFeature([
       Order,
       OrderItem,
@@ -24,6 +27,7 @@ import { TablesModule } from '../tables/tables.module';
       Option,
       TableSession,
       Payment,
+      Customer,
     ]),
   ],
   controllers: [OrdersController],

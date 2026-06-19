@@ -8,6 +8,8 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { CustomerJwtGuard } from '../customer-auth/guards/customer-jwt.guard';
+import { CurrentCustomer } from '../customer-auth/decorators/current-customer.decorator';
 
 @Controller('orders')
 export class OrdersController {
@@ -32,6 +34,20 @@ export class OrdersController {
   @Get('session/:sessionToken')
   async getBySession(@Param('sessionToken') sessionToken: string) {
     return this.ordersService.getOrdersBySession(sessionToken);
+  }
+
+  // ── Customer: Lịch sử đơn hàng ──
+  @Get('customer/history')
+  @UseGuards(CustomerJwtGuard)
+  async getCustomerHistory(@CurrentCustomer('sub') customerId: number) {
+    return this.ordersService.getCustomerHistory(customerId);
+  }
+
+  // ── Customer: Top sản phẩm hay đặt ──
+  @Get('customer/frequent')
+  @UseGuards(CustomerJwtGuard)
+  async getFrequentProducts(@CurrentCustomer('sub') customerId: number) {
+    return this.ordersService.getFrequentProducts(customerId);
   }
 
   // ── Customer/POS: Xem chi tiết đơn ──

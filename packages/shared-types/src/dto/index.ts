@@ -41,7 +41,9 @@ export interface CreateOrderItemDto {
 export interface CreateOrderDto {
   session_token: string;
   items: CreateOrderItemDto[];
+  customer_id?: number;
 }
+
 
 export interface AddOrderItemsDto {
   session_token: string;

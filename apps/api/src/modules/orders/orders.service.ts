@@ -13,6 +13,7 @@ import { CreateOrderDto, AddOrderItemsDto, OrderItemDto } from './dto/create-ord
 import { OrderGateway } from '../websocket/order.gateway';
 import { TablesService } from '../tables/tables.service';
 import { serializeDates } from '../../common/utils/serialize-dates';
+import { Customer } from '../../database/entities/customer.entity';
 
 @Injectable()
 export class OrdersService {
@@ -74,6 +75,9 @@ export class OrdersService {
       order.order_status = 'PENDING';
       order.payment_status = 'UNPAID';
       order.total_amount = 0;
+      if (dto.customer_id) {
+        order.customer_id = dto.customer_id;
+      }
 
       const saved = await manager.save(Order, order);
 
@@ -400,5 +404,88 @@ export class OrdersService {
       .getCount();
 
     return `#${String(count + 1).padStart(3, '0')}`;
+  }
+
+  // ── Lịch sử đơn hàng của customer ──
+  async getCustomerHistory(customerId: number) {
+    const orders = await this.orderRepo.find({
+      where: { customer_id: customerId },
+      relations: [
+        'table',
+        'items',
+        'items.product',
+        'items.variant',
+        'items.selected_options',
+        'items.selected_options.option',
+        'payment',
+      ],
+      order: { created_at: 'DESC' },
+      take: 50,
+    });
+
+    return orders.map((order) => serializeDates({
+      ...order,
+      total_amount: Number(order.total_amount),
+      items: order.items.map((item) => ({
+        ...item,
+        price: Number(item.price),
+        subtotal: Number(item.subtotal),
+        selected_options: item.selected_options.map((so) => ({
+          ...so,
+          price: Number(so.price),
+        })),
+      })),
+    }));
+  }
+
+  // ── Top sản phẩm hay đặt ──
+  async getFrequentProducts(customerId: number) {
+    const result = await this.orderItemRepo
+      .createQueryBuilder('item')
+      .select('item.product_id', 'product_id')
+      .addSelect('COUNT(*)', 'order_count')
+      .addSelect('SUM(item.quantity)', 'total_quantity')
+      .innerJoin('item.order', 'order')
+      .where('order.customer_id = :customerId', { customerId })
+      .groupBy('item.product_id')
+      .orderBy('"total_quantity"', 'DESC')
+      .limit(5)
+      .getRawMany();
+
+    // Lấy chi tiết sản phẩm
+    const productIds = result.map((r) => Number(r.product_id));
+    if (productIds.length === 0) return [];
+
+    const products = await this.productRepo.find({
+      where: productIds.map((id) => ({ id })),
+      relations: ['variants', 'category'],
+    });
+
+    return result.map((r) => {
+      const product = products.find((p) => p.id === Number(r.product_id));
+      return {
+        product_id: Number(r.product_id),
+        order_count: Number(r.order_count),
+        total_quantity: Number(r.total_quantity),
+        product: product
+          ? {
+              id: product.id,
+              name: product.name,
+              description: product.description,
+              base_price: Number(product.base_price),
+              image_url: product.image_url,
+              is_available: product.is_available,
+              is_popular: product.is_popular,
+              category_name: product.category?.name,
+              variants: product.variants?.map((v) => ({
+                id: v.id,
+                name: v.variant_name,
+                price_adjustment: Number(v.price_adjustment),
+                is_default: v.is_default,
+              })),
+            }
+          : null,
+      };
+    });
   }
 }

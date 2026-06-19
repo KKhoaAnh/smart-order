@@ -160,3 +160,80 @@ export function createServiceRequest(
     body: JSON.stringify(dto),
   });
 }
+
+/* ============================================================
+   Authenticated Fetch (Customer JWT)
+   ============================================================ */
+
+export function apiFetchAuth<T>(
+  endpoint: string,
+  token: string,
+  options?: RequestInit,
+): Promise<T> {
+  return apiFetch<T>(endpoint, {
+    ...options,
+    headers: {
+      ...options?.headers,
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+/* ============================================================
+   Favorites
+   ============================================================ */
+
+export function getFavorites(token: string): Promise<any[]> {
+  return apiFetchAuth<any[]>('favorites', token);
+}
+
+export function getFavoriteIds(token: string): Promise<number[]> {
+  return apiFetchAuth<number[]>('favorites/ids', token);
+}
+
+export function addFavorite(token: string, productId: number): Promise<any> {
+  return apiFetchAuth('favorites', token, {
+    method: 'POST',
+    body: JSON.stringify({ product_id: productId }),
+  });
+}
+
+export function removeFavorite(token: string, productId: number): Promise<any> {
+  return apiFetchAuth(`favorites/${productId}`, token, {
+    method: 'DELETE',
+  });
+}
+
+/* ============================================================
+   Order History & Frequent
+   ============================================================ */
+
+export function getOrderHistory(token: string): Promise<any[]> {
+  return apiFetchAuth<any[]>('orders/customer/history', token);
+}
+
+export function getFrequentProducts(token: string): Promise<any[]> {
+  return apiFetchAuth<any[]>('orders/customer/frequent', token);
+}
+
+/* ============================================================
+   Customer Auth
+   ============================================================ */
+
+export function customerRegister(phone: string, name: string): Promise<any> {
+  return apiFetch('customer-auth/register', {
+    method: 'POST',
+    body: JSON.stringify({ phone, name }),
+  });
+}
+
+export function customerLogin(phone: string): Promise<any> {
+  return apiFetch('customer-auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ phone }),
+  });
+}
+
+export function getCustomerProfile(token: string): Promise<any> {
+  return apiFetchAuth('customer-auth/profile', token);
+}
