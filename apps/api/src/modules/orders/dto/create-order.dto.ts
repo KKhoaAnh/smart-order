@@ -22,6 +22,16 @@ export class OrderItemDto {
   option_ids?: number[];
 }
 
+export class ComboOrderItemDto {
+  @IsNumber()
+  combo_id: number;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => OrderItemDto)
+  items: OrderItemDto[];
+}
+
 export class CreateOrderDto {
   @IsString()
   @IsNotEmpty()
@@ -39,6 +49,12 @@ export class CreateOrderDto {
   @IsString()
   @IsOptional()
   coupon_code?: string;
+
+  @IsArray()
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => ComboOrderItemDto)
+  combos?: ComboOrderItemDto[];
 }
 
 export class AddOrderItemsDto {

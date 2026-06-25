@@ -14,12 +14,15 @@ import { Customer } from '../../database/entities/customer.entity';
 import { TablesModule } from '../tables/tables.module';
 import { CustomerAuthModule } from '../customer-auth/customer-auth.module';
 import { PromotionsModule } from '../promotions/promotions.module';
+import { CombosModule } from '../combos/combos.module';
+import { Combo } from '../../database/entities/combo.entity';
 
 @Module({
   imports: [
     TablesModule,
     CustomerAuthModule,
     PromotionsModule,
+    CombosModule,
     TypeOrmModule.forFeature([
       Order,
       OrderItem,
@@ -30,6 +33,7 @@ import { PromotionsModule } from '../promotions/promotions.module';
       TableSession,
       Payment,
       Customer,
+      Combo,
     ]),
   ],
   controllers: [OrdersController],

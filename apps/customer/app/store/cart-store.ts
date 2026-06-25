@@ -27,6 +27,24 @@ export interface CartItem {
   note?: string;
   unitPrice: number;
   subtotal: number;
+  // Combo fields
+  isCombo?: boolean;
+  comboId?: number;
+  comboName?: string;
+  comboImage?: string;
+  comboBasePrice?: number;
+  comboSubItems?: ComboCartSubItem[];
+}
+
+export interface ComboCartSubItem {
+  productId: number;
+  productName: string;
+  productImage?: string;
+  variantId?: number;
+  variantName?: string;
+  variantAdjustment: number;
+  selectedOptions: CartItemOption[];
+  optionsTotal: number;
 }
 
 export type CartItemInput = Omit<CartItem, 'id' | 'unitPrice' | 'subtotal'>;
@@ -88,6 +106,29 @@ export const useCartStore = create<CartState>()(
 
       // Actions
       addItem: (input) => {
+        // Combo items always get unique IDs (no merging)
+        if (input.isCombo && input.comboId) {
+          const id = `combo-${input.comboId}-${Date.now()}`;
+          // Compute combo unit price = comboBasePrice + variant upgrades + toppings
+          let extraCost = 0;
+          if (input.comboSubItems) {
+            for (const sub of input.comboSubItems) {
+              if (sub.variantAdjustment > 0) extraCost += sub.variantAdjustment;
+              extraCost += sub.optionsTotal;
+            }
+          }
+          const unitPrice = (input.comboBasePrice || input.basePrice) + extraCost;
+          const newItem: CartItem = {
+            ...input,
+            id,
+            unitPrice,
+            subtotal: unitPrice * input.quantity,
+          };
+          set((state) => ({ items: [...state.items, newItem] }));
+          return;
+        }
+
+        // Regular product item
         const optionIds = input.selectedOptions.map((o) => o.id);
         const id = generateCartItemId(input.productId, input.variantId, optionIds);
         const unitPrice = computeUnitPrice(

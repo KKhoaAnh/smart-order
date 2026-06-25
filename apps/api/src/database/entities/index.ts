@@ -24,3 +24,5 @@ export { Review } from './review.entity';
 export { Favorite } from './favorite.entity';
 export { Promotion } from './promotion.entity';
 export { OrderPromotion } from './order-promotion.entity';
+export { Combo } from './combo.entity';
+export { ComboItem } from './combo-item.entity';

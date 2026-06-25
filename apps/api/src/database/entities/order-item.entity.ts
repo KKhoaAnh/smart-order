@@ -40,6 +40,9 @@ export class OrderItem {
   @Column({ default: 1 })
   order_round: number;
 
+  @Column({ length: 50, nullable: true })
+  combo_group_id: string;
+
   @Column({
     type: 'enum',
     enum: ['PENDING', 'COOKING', 'SERVED'],

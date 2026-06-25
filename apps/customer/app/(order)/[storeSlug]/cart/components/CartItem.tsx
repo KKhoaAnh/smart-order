@@ -1,9 +1,9 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Minus, Plus, X, ImageOff } from 'lucide-react';
+import { Minus, Plus, X, ImageOff, Package } from 'lucide-react';
 import { formatPrice } from '../../../../lib/format';
-import { useCartStore } from '../../../../store/cart-store';
+import { useCartStore, type ComboCartSubItem } from '../../../../store/cart-store';
 
 interface CartItemProps {
   item: {
@@ -16,6 +16,10 @@ interface CartItemProps {
     unitPrice: number;
     subtotal: number;
     note?: string;
+    // Combo fields
+    isCombo?: boolean;
+    comboName?: string;
+    comboSubItems?: ComboCartSubItem[];
   };
 }
 
@@ -36,7 +40,7 @@ export function CartItem({ item }: CartItemProps) {
         padding: 14,
         backgroundColor: '#FFFFFF',
         borderRadius: 16,
-        border: '1px solid #E8E0D8',
+        border: item.isCombo ? '1.5px solid #F59E0B' : '1px solid #E8E0D8',
         position: 'relative',
       }}
     >
@@ -46,7 +50,7 @@ export function CartItem({ item }: CartItemProps) {
           width: 68,
           height: 68,
           borderRadius: 12,
-          backgroundColor: '#F5F0EB',
+          backgroundColor: item.isCombo ? '#FFF7ED' : '#F5F0EB',
           flexShrink: 0,
           overflow: 'hidden',
           display: 'flex',
@@ -60,6 +64,8 @@ export function CartItem({ item }: CartItemProps) {
             alt={item.productName}
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           />
+        ) : item.isCombo ? (
+          <Package size={24} color="#F59E0B" strokeWidth={1.5} />
         ) : (
           <ImageOff size={22} color="#D4B896" strokeWidth={1.5} />
         )}
@@ -68,26 +74,69 @@ export function CartItem({ item }: CartItemProps) {
       {/* Info */}
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
         <div>
-          <h3 style={{ fontSize: 14, fontWeight: 600, color: '#1A1A1A', margin: 0, lineHeight: 1.3 }}>
-            {item.productName}
-          </h3>
-
-          {/* Details: variant + options */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 3 }}>
-            {item.variantName && (
-              <span style={{ fontSize: 11, color: '#A0785D', backgroundColor: '#FAF5F0', padding: '1px 6px', borderRadius: 4 }}>
-                {item.variantName}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <h3 style={{ fontSize: 14, fontWeight: 600, color: '#1A1A1A', margin: 0, lineHeight: 1.3 }}>
+              {item.isCombo ? item.comboName || item.productName : item.productName}
+            </h3>
+            {item.isCombo && (
+              <span
+                style={{
+                  fontSize: 10,
+                  fontWeight: 700,
+                  color: '#F59E0B',
+                  backgroundColor: '#FFFBEB',
+                  padding: '1px 6px',
+                  borderRadius: 4,
+                  border: '1px solid #FDE68A',
+                }}
+              >
+                COMBO
               </span>
             )}
-            {item.selectedOptions.map((opt) => (
-              <span
-                key={opt.name}
-                style={{ fontSize: 11, color: '#6B6B6B', backgroundColor: '#F3F4F6', padding: '1px 6px', borderRadius: 4 }}
-              >
-                {opt.name}
-              </span>
-            ))}
           </div>
+
+          {/* Regular item details: variant + options */}
+          {!item.isCombo && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 3 }}>
+              {item.variantName && (
+                <span style={{ fontSize: 11, color: '#A0785D', backgroundColor: '#FAF5F0', padding: '1px 6px', borderRadius: 4 }}>
+                  {item.variantName}
+                </span>
+              )}
+              {item.selectedOptions.map((opt) => (
+                <span
+                  key={opt.name}
+                  style={{ fontSize: 11, color: '#6B6B6B', backgroundColor: '#F3F4F6', padding: '1px 6px', borderRadius: 4 }}
+                >
+                  {opt.name}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Combo sub-items */}
+          {item.isCombo && item.comboSubItems && (
+            <div style={{ marginTop: 4 }}>
+              {item.comboSubItems.map((sub, idx) => (
+                <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: 4, marginBottom: 2 }}>
+                  <div style={{ width: 3, height: 3, borderRadius: 2, backgroundColor: '#D4B896', marginTop: 5, flexShrink: 0 }} />
+                  <div>
+                    <span style={{ fontSize: 11, color: '#4B5563' }}>
+                      {sub.productName}
+                    </span>
+                    {(sub.variantName || sub.selectedOptions.length > 0) && (
+                      <span style={{ fontSize: 10, color: '#9CA3AF', marginLeft: 4 }}>
+                        {[
+                          sub.variantName,
+                          ...sub.selectedOptions.map((o) => o.name),
+                        ].filter(Boolean).join(', ')}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           {item.note && (
             <p style={{ fontSize: 11, color: '#9CA3AF', fontStyle: 'italic', margin: '3px 0 0' }}>

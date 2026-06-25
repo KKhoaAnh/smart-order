@@ -22,6 +22,7 @@ import { ReviewsModule } from './modules/reviews/reviews.module';
 import { FavoritesModule } from './modules/favorites/favorites.module';
 import { UsersModule } from './modules/users/users.module';
 import { PromotionsModule } from './modules/promotions/promotions.module';
+import { CombosModule } from './modules/combos/combos.module';
 
 @Module({
   imports: [
@@ -71,6 +72,7 @@ import { PromotionsModule } from './modules/promotions/promotions.module';
     FavoritesModule,
     UsersModule,
     PromotionsModule,
+    CombosModule,
   ],
   controllers: [],
   providers: [

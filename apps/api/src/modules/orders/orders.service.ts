@@ -15,6 +15,7 @@ import { TablesService } from '../tables/tables.service';
 import { serializeDates } from '../../common/utils/serialize-dates';
 import { Customer } from '../../database/entities/customer.entity';
 import { PromotionsService } from '../promotions/promotions.service';
+import { Combo } from '../../database/entities/combo.entity';
 
 @Injectable()
 export class OrdersService {
@@ -39,6 +40,8 @@ export class OrdersService {
     private readonly orderGateway: OrderGateway,
     private readonly tablesService: TablesService,
     private readonly promotionsService: PromotionsService,
+    @InjectRepository(Combo)
+    private readonly comboRepo: Repository<Combo>,
   ) {}
 
   // ── Tạo đơn hàng mới ──
@@ -88,6 +91,16 @@ export class OrdersService {
       for (const itemDto of dto.items) {
         const itemTotal = await this.createOrderItem(manager, saved.id, itemDto, 1);
         totalAmount += itemTotal;
+      }
+
+      // 5.5. Tạo combo items
+      if (dto.combos && dto.combos.length > 0) {
+        for (const comboDto of dto.combos) {
+          const comboTotal = await this.createComboItems(
+            manager, saved.id, comboDto.combo_id, comboDto.items, 1,
+          );
+          totalAmount += comboTotal;
+        }
       }
 
       // 6. Cập nhật total
@@ -421,6 +434,108 @@ export class OrdersService {
     }
 
     return subtotal;
+  }
+
+  // ── Helper: Tạo combo order items ──
+  private async createComboItems(
+    manager: any,
+    orderId: number,
+    comboId: number,
+    itemDtos: OrderItemDto[],
+    round: number,
+  ): Promise<number> {
+    const combo = await this.comboRepo.findOne({
+      where: { id: comboId },
+      relations: ['items', 'items.product'],
+    });
+    if (!combo) throw new NotFoundException(`Combo #${comboId} không tồn tại`);
+
+    const comboPrice = Number(combo.combo_price);
+
+    // Tính tổng giá gốc để phân bổ tỷ lệ
+    let totalOriginal = 0;
+    for (const ci of combo.items) {
+      totalOriginal += Number(ci.product.base_price) * ci.quantity;
+    }
+    if (totalOriginal <= 0) totalOriginal = comboPrice;
+
+    // Generate unique combo_group_id
+    const comboGroupId = `combo-${comboId}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+
+    let comboTotal = 0;
+    let allocatedSoFar = 0;
+
+    for (let i = 0; i < itemDtos.length; i++) {
+      const itemDto = itemDtos[i];
+      const isLast = i === itemDtos.length - 1;
+
+      const product = await this.productRepo.findOne({ where: { id: itemDto.product_id } });
+      if (!product) throw new NotFoundException(`Sản phẩm #${itemDto.product_id} không tồn tại`);
+
+      // Tính giá phân bổ combo cho item này
+      const productOriginal = Number(product.base_price) * itemDto.quantity;
+      let allocatedPrice: number;
+      if (isLast) {
+        // Item cuối: lấy phần còn lại để tránh sai lệch do làm tròn
+        allocatedPrice = comboPrice - allocatedSoFar;
+      } else {
+        allocatedPrice = Math.round((productOriginal / totalOriginal) * comboPrice);
+        allocatedSoFar += allocatedPrice;
+      }
+
+      // Tính phụ thu variant upgrade (trên giá combo, không phân bổ)
+      let variantUpcharge = 0;
+      if (itemDto.variant_id) {
+        const variant = await this.variantRepo.findOne({ where: { id: itemDto.variant_id } });
+        if (variant) {
+          variantUpcharge = Number(variant.price_adjustment);
+        }
+      }
+
+      // Tính phụ thu options/toppings
+      let optionsTotal = 0;
+      const selectedOptions: { option_id: number; price: number }[] = [];
+      if (itemDto.option_ids && itemDto.option_ids.length > 0) {
+        for (const optId of itemDto.option_ids) {
+          const opt = await this.optionRepo.findOne({ where: { id: optId } });
+          if (opt) {
+            optionsTotal += Number(opt.price);
+            selectedOptions.push({ option_id: opt.id, price: Number(opt.price) });
+          }
+        }
+      }
+
+      // Giá item = giá phân bổ + phụ thu variant + options
+      const itemPrice = allocatedPrice / itemDto.quantity + variantUpcharge;
+      const subtotal = (itemPrice + optionsTotal) * itemDto.quantity;
+
+      // Save order item với combo_group_id
+      const item = new OrderItem();
+      item.order_id = orderId;
+      item.product_id = itemDto.product_id;
+      item.variant_id = itemDto.variant_id!;
+      item.quantity = itemDto.quantity;
+      item.price = itemPrice;
+      item.subtotal = subtotal;
+      item.note = itemDto.note!;
+      item.order_round = round;
+      item.item_status = 'PENDING';
+      item.combo_group_id = comboGroupId;
+      const savedItem = await manager.save(OrderItem, item);
+
+      // Save selected options
+      for (const so of selectedOptions) {
+        const oio = new OrderItemOption();
+        oio.order_item_id = savedItem.id;
+        oio.option_id = so.option_id;
+        oio.price = so.price;
+        await manager.save(OrderItemOption, oio);
+      }
+
+      comboTotal += subtotal;
+    }
+
+    return comboTotal;
   }
 
   // ── Helper: Generate order number ──

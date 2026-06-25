@@ -656,40 +656,97 @@ export default function OrdersPage() {
               <div>
                 <h3 className="font-semibold text-text-primary mb-3">Danh sách món</h3>
                 <div className="space-y-3">
-                  {selectedOrder.items?.map((item: any, idx: number) => (
-                    <div
-                      key={item.id ?? `item-${idx}`}
-                      className="flex items-start justify-between p-3 bg-bg-secondary rounded-xl hover:bg-border-light transition-colors"
-                    >
-                      <div className="flex-1">
-                        <p className="font-medium text-text-primary">
-                          {item.product?.name || `Món #${item.product_id}`}
-                        </p>
-                        {item.variant && (
-                          <p className="text-xs text-text-secondary">Size: {item.variant.variant_name || item.variant.name}</p>
-                        )}
-                        {item.selected_options?.length > 0 && (
-                          <p className="text-xs text-text-secondary">
-                            {item.selected_options.map((o: any) => o.option?.option_name || o.option?.name || '').filter(Boolean).join(', ')}
-                          </p>
-                        )}
-                        {item.note && (
-                          <p className="text-xs text-brand-secondary mt-1">📝 {item.note}</p>
-                        )}
-                        {item.order_round > 1 && (
-                          <span className="text-[10px] bg-info-bg text-info px-1.5 py-0.5 rounded font-medium mt-1 inline-block">
-                            Lượt {item.order_round}
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-right ml-3">
-                        <p className="text-sm font-medium text-text-muted">x{item.quantity}</p>
-                        <p className="text-sm text-brand-primary font-semibold">
-                          {formatCurrency(item.subtotal || item.price * item.quantity)}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                  {(() => {
+                    const items = selectedOrder.items || [];
+                    // Group by combo_group_id
+                    const comboGroups = new Map<string, any[]>();
+                    const regularItems: any[] = [];
+
+                    items.forEach((item: any) => {
+                      if (item.combo_group_id) {
+                        const group = comboGroups.get(item.combo_group_id) || [];
+                        group.push(item);
+                        comboGroups.set(item.combo_group_id, group);
+                      } else {
+                        regularItems.push(item);
+                      }
+                    });
+
+                    return (
+                      <>
+                        {/* Combo groups */}
+                        {Array.from(comboGroups.entries()).map(([groupId, groupItems]) => (
+                          <div key={groupId} className="border border-amber-200 bg-amber-50/30 rounded-xl p-3 space-y-2">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-[10px] font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full">
+                                COMBO
+                              </span>
+                            </div>
+                            {groupItems.map((item: any, idx: number) => (
+                              <div key={item.id ?? `combo-${groupId}-${idx}`} className="flex items-start justify-between pl-2">
+                                <div className="flex-1">
+                                  <p className="font-medium text-sm text-text-primary">
+                                    {item.product?.name || `Món #${item.product_id}`}
+                                  </p>
+                                  {item.variant && (
+                                    <p className="text-xs text-text-secondary">Size: {item.variant.variant_name || item.variant.name}</p>
+                                  )}
+                                  {item.selected_options?.length > 0 && (
+                                    <p className="text-xs text-text-secondary">
+                                      {item.selected_options.map((o: any) => o.option?.option_name || o.option?.name || '').filter(Boolean).join(', ')}
+                                    </p>
+                                  )}
+                                  {item.note && <p className="text-xs text-brand-secondary mt-1">📝 {item.note}</p>}
+                                </div>
+                                <div className="text-right ml-3">
+                                  <p className="text-xs font-medium text-text-muted">x{item.quantity}</p>
+                                  <p className="text-xs text-brand-primary font-semibold">
+                                    {formatCurrency(item.subtotal || item.price * item.quantity)}
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ))}
+
+                        {/* Regular items */}
+                        {regularItems.map((item: any, idx: number) => (
+                          <div
+                            key={item.id ?? `item-${idx}`}
+                            className="flex items-start justify-between p-3 bg-bg-secondary rounded-xl hover:bg-border-light transition-colors"
+                          >
+                            <div className="flex-1">
+                              <p className="font-medium text-text-primary">
+                                {item.product?.name || `Món #${item.product_id}`}
+                              </p>
+                              {item.variant && (
+                                <p className="text-xs text-text-secondary">Size: {item.variant.variant_name || item.variant.name}</p>
+                              )}
+                              {item.selected_options?.length > 0 && (
+                                <p className="text-xs text-text-secondary">
+                                  {item.selected_options.map((o: any) => o.option?.option_name || o.option?.name || '').filter(Boolean).join(', ')}
+                                </p>
+                              )}
+                              {item.note && (
+                                <p className="text-xs text-brand-secondary mt-1">📝 {item.note}</p>
+                              )}
+                              {item.order_round > 1 && (
+                                <span className="text-[10px] bg-info-bg text-info px-1.5 py-0.5 rounded font-medium mt-1 inline-block">
+                                  Lượt {item.order_round}
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-right ml-3">
+                              <p className="text-sm font-medium text-text-muted">x{item.quantity}</p>
+                              <p className="text-sm text-brand-primary font-semibold">
+                                {formatCurrency(item.subtotal || item.price * item.quantity)}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
 

@@ -310,6 +310,33 @@ export const usersApi = {
     fetchApi(`/users/${id}/toggle-active`, { method: 'PATCH' }),
 };
 
+// ── Combos API ──
+
+export const combosApi = {
+  getAll: async (storeId: number) => {
+    const res = await fetchApi(`/combos/store/${storeId}`);
+    return Array.isArray(res) ? res : res.data || res;
+  },
+  getOne: async (id: number) => {
+    return fetchApi(`/combos/${id}`);
+  },
+  create: async (storeId: number, data: any) => {
+    return fetchApi(`/combos/store/${storeId}`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+  update: async (id: number, data: any) => {
+    return fetchApi(`/combos/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
+  delete: async (id: number) => {
+    return fetchApi(`/combos/${id}`, { method: 'DELETE' });
+  },
+};
+
 // ── Generic fetch export for pages ──
 
 export { fetchApi as apiFetch };

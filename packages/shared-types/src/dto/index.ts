@@ -43,6 +43,12 @@ export interface CreateOrderDto {
   items: CreateOrderItemDto[];
   customer_id?: number;
   coupon_code?: string;
+  combos?: ComboOrderItemDto[];
+}
+
+export interface ComboOrderItemDto {
+  combo_id: number;
+  items: CreateOrderItemDto[];
 }
 
 
@@ -204,4 +210,42 @@ export interface CreatePromotionDto {
   end_date: string;
   is_active?: boolean;
   free_product_id?: number;
+}
+
+// --- Combos ---
+
+export interface ComboDto {
+  id: number;
+  store_id: number;
+  name: string;
+  description?: string;
+  image_url?: string;
+  combo_price: number;
+  original_price: number;
+  save_percent: number;
+  is_active: boolean;
+  priority: number;
+  items: ComboItemDto[];
+}
+
+export interface ComboItemDto {
+  id: number;
+  product_id: number;
+  product_name: string;
+  product_image?: string;
+  default_variant_id?: number;
+  quantity: number;
+  base_price: number;
+  variants: MenuVariantDto[];
+  options: MenuOptionDto[];
+}
+
+export interface CreateComboDto {
+  name: string;
+  description?: string;
+  image_url?: string;
+  combo_price: number;
+  is_active?: boolean;
+  priority?: number;
+  items: { product_id: number; default_variant_id?: number; quantity: number }[];
 }

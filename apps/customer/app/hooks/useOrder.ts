@@ -6,7 +6,7 @@ import { useCartStore } from '../store/cart-store';
 import { useSessionStore } from '../store/session-store';
 import { useOrderStore } from '../store/order-store';
 import { useCustomerAuthStore } from '../store/customer-auth-store';
-import type { CreateOrderItemDto } from 'shared-types';
+import type { CreateOrderItemDto, ComboOrderItemDto } from 'shared-types';
 import toast from 'react-hot-toast';
 
 interface UseOrderReturn {
@@ -27,15 +27,35 @@ export function useOrder(): UseOrderReturn {
   const { currentOrder, setOrder, setLoading } = useOrderStore();
   const { customer, isAuthenticated } = useCustomerAuthStore();
 
-  // Convert cart items to API format
+  // Convert regular cart items to API format (exclude combos)
   const cartToOrderItems = useCallback((): CreateOrderItemDto[] => {
-    return cartItems.map((item) => ({
-      product_id: item.productId,
-      variant_id: item.variantId || undefined,
-      quantity: item.quantity,
-      note: item.note || undefined,
-      option_ids: item.selectedOptions.map((opt) => opt.id),
-    }));
+    return cartItems
+      .filter((item) => !item.isCombo)
+      .map((item) => ({
+        product_id: item.productId,
+        variant_id: item.variantId || undefined,
+        quantity: item.quantity,
+        note: item.note || undefined,
+        option_ids: item.selectedOptions.map((opt) => opt.id),
+      }));
+  }, [cartItems]);
+
+  // Convert combo cart items to API format
+  const cartToCombos = useCallback((): ComboOrderItemDto[] => {
+    return cartItems
+      .filter((item) => item.isCombo && item.comboId)
+      .flatMap((item) => {
+        // For each quantity, create a separate combo order
+        return Array.from({ length: item.quantity }, () => ({
+          combo_id: item.comboId!,
+          items: (item.comboSubItems || []).map((sub) => ({
+            product_id: sub.productId,
+            variant_id: sub.variantId || undefined,
+            quantity: 1,
+            option_ids: sub.selectedOptions.map((opt) => opt.id),
+          })),
+        }));
+      });
   }, [cartItems]);
 
   // Submit a new order
@@ -54,11 +74,15 @@ export function useOrder(): UseOrderReturn {
     setError(null);
 
     try {
+      const regularItems = cartToOrderItems();
+      const combos = cartToCombos();
+
       const orderData = await createOrder({
         session_token: sessionToken,
-        items: cartToOrderItems(),
+        items: regularItems,
         customer_id: isAuthenticated && customer ? customer.id : undefined,
         coupon_code: couponCode || undefined,
+        combos: combos.length > 0 ? combos : undefined,
       });
 
       // Map response to TrackedOrder
@@ -77,7 +101,7 @@ export function useOrder(): UseOrderReturn {
     } finally {
       setIsSubmitting(false);
     }
-  }, [sessionToken, cartItems, cartToOrderItems, clearCart, setOrder, customer, isAuthenticated]);
+  }, [sessionToken, cartItems, cartToOrderItems, cartToCombos, clearCart, setOrder, customer, isAuthenticated]);
 
   // Add more items to existing order
   const addMoreItems = useCallback(async (): Promise<boolean> => {

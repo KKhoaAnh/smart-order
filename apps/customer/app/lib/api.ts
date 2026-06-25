@@ -242,6 +242,14 @@ export function getActivePromotions(storeId: number): Promise<any[]> {
 }
 
 /* ============================================================
+   Combos
+   ============================================================ */
+
+export function getActiveCombos(storeId: number): Promise<any[]> {
+  return apiFetch<any[]>(`combos/store/${storeId}/active`);
+}
+
+/* ============================================================
    Customer Auth
    ============================================================ */
 

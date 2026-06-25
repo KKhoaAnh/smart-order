@@ -10,13 +10,15 @@ import { useCustomerAuthStore } from '../../../store/customer-auth-store';
 import { useMenu } from '../../../hooks/useMenu';
 import { useFavorites } from '../../../hooks/useFavorites';
 import { useHistory } from '../../../hooks/useHistory';
-import { getActivePromotions } from '../../../lib/api';
+import { getActivePromotions, getActiveCombos } from '../../../lib/api';
 import { SearchBar } from './components/SearchBar';
 import { CategoryTabs } from './components/CategoryTabs';
 import { ProductCard } from './components/ProductCard';
 import { ProductDetailSheet } from './components/ProductDetailSheet';
 import { FloatingCartButton } from './components/FloatingCartButton';
 import { PromotionBanner, type ActivePromotion } from './components/PromotionBanner';
+import { ComboSection, type ComboData } from './components/ComboSection';
+import { ComboDetailSheet } from './components/ComboDetailSheet';
 import { Skeleton } from '../../../components/ui/Skeleton';
 import { SessionExpired } from '../../../components/states/SessionExpired';
 import { NetworkError } from '../../../components/states/NetworkError';
@@ -48,6 +50,9 @@ export default function MenuPage() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [activePromotions, setActivePromotions] = useState<ActivePromotion[]>([]);
+  const [activeCombos, setActiveCombos] = useState<ComboData[]>([]);
+  const [selectedCombo, setSelectedCombo] = useState<ComboData | null>(null);
+  const [isComboSheetOpen, setIsComboSheetOpen] = useState(false);
   const categoryRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
   // Favorites & history (chỉ khi đã đăng nhập)
@@ -60,6 +65,9 @@ export default function MenuPage() {
     getActivePromotions(storeInfo.id)
       .then((data) => setActivePromotions(Array.isArray(data) ? data : []))
       .catch(() => setActivePromotions([]));
+    getActiveCombos(storeInfo.id)
+      .then((data) => setActiveCombos(Array.isArray(data) ? data : []))
+      .catch(() => setActiveCombos([]));
   }, [storeInfo?.id]);
 
   // Lọc danh mục theo yêu thích
@@ -231,6 +239,17 @@ export default function MenuPage() {
         <PromotionBanner promotions={activePromotions} />
       )}
 
+      {/* Combo Section — between promotions and menu */}
+      {!searchQuery && activeCombos.length > 0 && (
+        <ComboSection
+          combos={activeCombos}
+          onComboClick={(combo) => {
+            setSelectedCombo(combo);
+            setIsComboSheetOpen(true);
+          }}
+        />
+      )}
+
       {/* Menu Content */}
       <div style={{ padding: '16px 16px 0' }}>
         {isLoading ? (
@@ -375,6 +394,13 @@ export default function MenuPage() {
         product={selectedProduct}
         isOpen={isSheetOpen}
         onClose={() => setIsSheetOpen(false)}
+      />
+
+      {/* Combo Detail Bottom Sheet */}
+      <ComboDetailSheet
+        combo={selectedCombo}
+        isOpen={isComboSheetOpen}
+        onClose={() => setIsComboSheetOpen(false)}
       />
 
       {/* Floating Cart Button */}

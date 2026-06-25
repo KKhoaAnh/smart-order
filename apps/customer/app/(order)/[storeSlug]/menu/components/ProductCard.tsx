@@ -179,16 +179,16 @@ export function ProductCard({ product, onClick, cartQuantity, isFavorite, onTogg
       </div>
 
       {/* Cart Quantity Badge */}
-      {cartQuantity && cartQuantity > 0 && (
+      {(cartQuantity ?? 0) > 0 && (
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           style={{
             position: 'absolute',
             top: 8,
-            right: onToggleFavorite ? 34 : 8,
-            width: 22,
-            height: 22,
+            right: onToggleFavorite ? 40 : 8,
+            width: 26,
+            height: 26,
             borderRadius: '50%',
             backgroundColor: '#6F4E37',
             color: '#FFFFFF',
